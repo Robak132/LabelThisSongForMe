@@ -17,6 +17,12 @@ https://ieeexplore-1ieee-1org-1irjk11yg02a0.eczyt.bg.pw.edu.pl/stamp/stamp.jsp?t
 
 https://ismir2013.ismir.net/wp-content/uploads/2013/09/69_Paper.pdf
 
+#ISMIR
+https://ismir.net/
+
+https://ismir2021.ismir.net/
+
+https://ismir2022.ismir.net/
 
 #Datasets
 **MagnaTagATune**
