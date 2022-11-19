@@ -9,7 +9,7 @@ def main(config):
         os.makedirs(config.model_save_path)
 
     # import data loader
-    from data_loader.mtat_loader import get_audio_loader
+    from src.models.mtat_loader import get_audio_loader
 
     # audio length
     if config.model_type == 'fcn' or config.model_type == 'crnn':
