@@ -6,8 +6,8 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 import torchaudio
 
-from modules import Conv_1d, ResSE_1d, Conv_2d, Res_2d, Conv_V, Conv_H, HarmonicSTFT, Res_2d_mp
-from attention_modules import BertConfig, BertEncoder, BertEmbeddings, BertPooler, PositionalEncoding
+from src.models.modules import Conv_1d, ResSE_1d, Conv_2d, Res_2d, Conv_V, Conv_H, HarmonicSTFT, Res_2d_mp
+from src.models.attention_modules import BertConfig, BertEncoder, BertEmbeddings, BertPooler, PositionalEncoding
 
 
 class FCN(nn.Module):

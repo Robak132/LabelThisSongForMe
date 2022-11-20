@@ -1,7 +1,7 @@
 import os
 import argparse
 from src.models.solver import Solver
-from mtat_loader import get_audio_loader
+from src.models.mtat_loader import get_audio_loader
 
 
 def main(config):

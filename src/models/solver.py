@@ -11,7 +11,7 @@ import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from torch.autograd import Variable
 
-import model as Model
+import src.models.model as Model
 
 skip_files = set(['TRAIISZ128F42684BB', 'TRAONEQ128F42A8AB7', 'TRADRNH128E0784511', 'TRBGHEU128F92D778F',
                   'TRCHYIF128F1464CE7', 'TRCVDKQ128E0790C86', 'TREWVFM128F146816E', 'TREQRIV128F1468B08',
@@ -80,8 +80,8 @@ class Solver(object):
         print(f"CUDA: {self.is_cuda}")
 
         # Build model
-        self.valid_list = np.load('../../split/mtat/valid.npy')
-        self.binary = np.load('../../split/mtat/binary.npy')
+        self.valid_list = np.load('split/mtat/valid.npy')
+        self.binary = np.load('split/mtat/binary.npy')
         self.build_model()
 
         # Tensorboard
