@@ -91,20 +91,8 @@ class Predict(object):
 
 
     def get_dataset(self):
-        if self.dataset == 'mtat':
-            self.test_list = np.load('./../split/mtat/test.npy')
-            self.binary = np.load('./../split/mtat/binary.npy')
-        if self.dataset == 'msd':
-            test_file = os.path.join('./../split/msd','filtered_list_test.cP')
-            test_list = pickle.load(open(test_file,'rb'), encoding='bytes')
-            self.test_list = [value for value in test_list if value.decode() not in skip_files]
-            id2tag_file = os.path.join('./../split/msd', 'msd_id_to_tag_vector.cP')
-            self.id2tag = pickle.load(open(id2tag_file,'rb'), encoding='bytes')
-        if self.dataset == 'jamendo':
-            test_file = os.path.join('./../split/mtg-jamendo', 'autotagging_top50tags-test.tsv')
-            self.file_dict= read_file(test_file)
-            self.test_list= list(self.file_dict.keys())
-            self.mlb = LabelBinarizer().fit(TAGS)
+        self.test_list = np.load('../../split/mtat/test.npy')
+        self.binary = np.load('../../split/mtat/binary.npy')
 
     def load(self, filename):
         S = torch.load(filename)

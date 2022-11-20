@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 
+
 # Gelu
 def gelu(x):
     """Implementation of the gelu activation function.
@@ -16,11 +17,12 @@ def gelu(x):
     """
     return x * 0.5 * (1.0 + torch.erf(x / math.sqrt(2.0)))
 
+
 # LayerNorm
 try:
     from apex.normalization.fused_layer_norm import FusedLayerNorm as BertLayerNorm
 except ImportError:
-#print("Better speed can be achieved with apex installed from https://www.github.com/nvidia/apex.")
+    # print("Better speed can be achieved with apex installed from https://www.github.com/nvidia/apex.")
     class BertLayerNorm(nn.Module):
         def __init__(self, hidden_size, eps=1e-12):
             """Construct a layernorm module in the TF style (epsilon inside the square root).
@@ -199,6 +201,7 @@ class BertEncoder(nn.Module):
 class BertEmbeddings(nn.Module):
     """Construct the embeddings from word, position and token_type embeddings.
     """
+
     def __init__(self, config):
         super(BertEmbeddings, self).__init__()
         self.position_embeddings = nn.Embedding(config.max_position_embeddings, config.hidden_size)
@@ -216,7 +219,7 @@ class BertEmbeddings(nn.Module):
         position_embeddings = self.position_embeddings(position_ids)
 
         embeddings = input_ids + position_embeddings
-        #embeddings = input_ids
+        # embeddings = input_ids
         embeddings = self.LayerNorm(embeddings)
         embeddings = self.dropout(embeddings)
         return embeddings
@@ -237,9 +240,9 @@ class PositionalEncoding(nn.Module):
         position_enc = np.array([
             [pos / np.power(10000, 2 * (j // 2) / emb_dim) for j in range(emb_dim)]
             if pos != 0 else np.zeros(emb_dim) for pos in range(n_position)])
-        
-        position_enc[1:, 0::2] = np.sin(position_enc[1:, 0::2]) # apply sin on 0th,2nd,4th...emb_dim
-        position_enc[1:, 1::2] = np.cos(position_enc[1:, 1::2]) # apply cos on 1st,3rd,5th...emb_dim
+
+        position_enc[1:, 0::2] = np.sin(position_enc[1:, 0::2])  # apply sin on 0th,2nd,4th...emb_dim
+        position_enc[1:, 1::2] = np.cos(position_enc[1:, 1::2])  # apply cos on 1st,3rd,5th...emb_dim
         return torch.from_numpy(position_enc).type(torch.FloatTensor)
 
     def forward(self, word_seq):
@@ -247,6 +250,7 @@ class PositionalEncoding(nn.Module):
         position_encoding = position_encoding.to(word_seq.device)
         word_pos_encoded = word_seq + position_encoding
         return word_pos_encoded
+
 
 class BertPooler(nn.Module):
     def __init__(self, config):

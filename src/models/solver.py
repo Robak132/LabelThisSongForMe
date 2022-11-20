@@ -1,39 +1,45 @@
 # coding: utf-8
-import pickle
 import os
 import time
 import numpy as np
-import pandas as pd
 from sklearn import metrics
 import datetime
 import csv
 import tqdm
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from sklearn.preprocessing import LabelBinarizer
 from torch.utils.tensorboard import SummaryWriter
 from torch.autograd import Variable
 
 import model as Model
 
-
 skip_files = set(['TRAIISZ128F42684BB', 'TRAONEQ128F42A8AB7', 'TRADRNH128E0784511', 'TRBGHEU128F92D778F',
-                 'TRCHYIF128F1464CE7', 'TRCVDKQ128E0790C86', 'TREWVFM128F146816E', 'TREQRIV128F1468B08',
-                 'TREUVBN128F1468AC9', 'TRDKNBI128F14682B0', 'TRFWOAG128F14B12CB', 'TRFIYAF128F14688A6',
-                 'TRGYAEZ128F14A473F', 'TRIXPRK128F1468472', 'TRAQKCW128F9352A52', 'TRLAWQU128F1468AC8',
-                 'TRMSPLW128F14A544A', 'TRLNGQT128F1468261', 'TROTUWC128F1468AB4', 'TRNDAXE128F934C50E',
-                 'TRNHIBI128EF35F57D', 'TRMOREL128F1468AC4',  'TRPNFAG128F146825F', 'TRIXPOY128F14A46C7',
-                 'TROCQVE128F1468AC6', 'TRPCXJI128F14688A8', 'TRQKRKL128F1468AAE', 'TRPKNDC128F145998B',
-                 'TRRUHEH128F1468AAD', 'TRLUSKX128F14A4E50', 'TRMIRQA128F92F11F1', 'TRSRUXF128F1468784',
-                 'TRTNQKQ128F931C74D',  'TRTTUYE128F4244068', 'TRUQZKD128F1468243', 'TRUINWL128F1468258',
-                 'TRVRHOY128F14680BC', 'TRWVEYR128F1458A6F', 'TRVLISA128F1468960', 'TRYDUYU128F92F6BE0',
-                 'TRYOLFS128F9308346', 'TRMVCVS128F1468256', 'TRZSPHR128F1468AAC', 'TRXBJBW128F92EBD96',
-                 'TRYPGJX128F1468479', 'TRYNNNZ128F1468994', 'TRVDOVF128F92DC7F3', 'TRWUHZQ128F1451979',
-                 'TRXMAVV128F146825C', 'TRYNMEX128F14A401D', 'TREGWSL128F92C9D42', 'TRJKZDA12903CFBA43',
+                  'TRCHYIF128F1464CE7', 'TRCVDKQ128E0790C86', 'TREWVFM128F146816E', 'TREQRIV128F1468B08',
+                  'TREUVBN128F1468AC9', 'TRDKNBI128F14682B0', 'TRFWOAG128F14B12CB', 'TRFIYAF128F14688A6',
+                  'TRGYAEZ128F14A473F', 'TRIXPRK128F1468472', 'TRAQKCW128F9352A52', 'TRLAWQU128F1468AC8',
+                  'TRMSPLW128F14A544A', 'TRLNGQT128F1468261', 'TROTUWC128F1468AB4', 'TRNDAXE128F934C50E',
+                  'TRNHIBI128EF35F57D', 'TRMOREL128F1468AC4', 'TRPNFAG128F146825F', 'TRIXPOY128F14A46C7',
+                  'TROCQVE128F1468AC6', 'TRPCXJI128F14688A8', 'TRQKRKL128F1468AAE', 'TRPKNDC128F145998B',
+                  'TRRUHEH128F1468AAD', 'TRLUSKX128F14A4E50', 'TRMIRQA128F92F11F1', 'TRSRUXF128F1468784',
+                  'TRTNQKQ128F931C74D', 'TRTTUYE128F4244068', 'TRUQZKD128F1468243', 'TRUINWL128F1468258',
+                  'TRVRHOY128F14680BC', 'TRWVEYR128F1458A6F', 'TRVLISA128F1468960', 'TRYDUYU128F92F6BE0',
+                  'TRYOLFS128F9308346', 'TRMVCVS128F1468256', 'TRZSPHR128F1468AAC', 'TRXBJBW128F92EBD96',
+                  'TRYPGJX128F1468479', 'TRYNNNZ128F1468994', 'TRVDOVF128F92DC7F3', 'TRWUHZQ128F1451979',
+                  'TRXMAVV128F146825C', 'TRYNMEX128F14A401D', 'TREGWSL128F92C9D42', 'TRJKZDA12903CFBA43',
                   'TRBGJIZ128F92E42BC', 'TRVWNOH128E0788B78', 'TRCGBRK128F146A901'])
 
-TAGS = ['genre---downtempo', 'genre---ambient', 'genre---rock', 'instrument---synthesizer', 'genre---atmospheric', 'genre---indie', 'instrument---electricpiano', 'genre---newage', 'instrument---strings', 'instrument---drums', 'instrument---drummachine', 'genre---techno', 'instrument---guitar', 'genre---alternative', 'genre---easylistening', 'genre---instrumentalpop', 'genre---chillout', 'genre---metal', 'mood/theme---happy', 'genre---lounge', 'genre---reggae', 'genre---popfolk', 'genre---orchestral', 'instrument---acousticguitar', 'genre---poprock', 'instrument---piano', 'genre---trance', 'genre---dance', 'instrument---electricguitar', 'genre---soundtrack', 'genre---house', 'genre---hiphop', 'genre---classical', 'mood/theme---energetic', 'genre---electronic', 'genre---world', 'genre---experimental', 'instrument---violin', 'genre---folk', 'mood/theme---emotional', 'instrument---voice', 'instrument---keyboard', 'genre---pop', 'instrument---bass', 'instrument---computer', 'mood/theme---film', 'genre---triphop', 'genre---jazz', 'genre---funk', 'mood/theme---relaxing']
+TAGS = ['genre---downtempo', 'genre---ambient', 'genre---rock', 'instrument---synthesizer', 'genre---atmospheric',
+        'genre---indie', 'instrument---electricpiano', 'genre---newage', 'instrument---strings', 'instrument---drums',
+        'instrument---drummachine', 'genre---techno', 'instrument---guitar', 'genre---alternative',
+        'genre---easylistening', 'genre---instrumentalpop', 'genre---chillout', 'genre---metal', 'mood/theme---happy',
+        'genre---lounge', 'genre---reggae', 'genre---popfolk', 'genre---orchestral', 'instrument---acousticguitar',
+        'genre---poprock', 'instrument---piano', 'genre---trance', 'genre---dance', 'instrument---electricguitar',
+        'genre---soundtrack', 'genre---house', 'genre---hiphop', 'genre---classical', 'mood/theme---energetic',
+        'genre---electronic', 'genre---world', 'genre---experimental', 'instrument---violin', 'genre---folk',
+        'mood/theme---emotional', 'instrument---voice', 'instrument---keyboard', 'genre---pop', 'instrument---bass',
+        'instrument---computer', 'mood/theme---film', 'genre---triphop', 'genre---jazz', 'genre---funk',
+        'mood/theme---relaxing']
+
 
 def read_file(tsv_file):
     tracks = {}
@@ -47,7 +53,6 @@ def read_file(tsv_file):
                 'tags': row[5:],
             }
     return tracks
-
 
 
 class Solver(object):
@@ -75,30 +80,12 @@ class Solver(object):
         print(f"CUDA: {self.is_cuda}")
 
         # Build model
-        self.get_dataset()
+        self.valid_list = np.load('../../split/mtat/valid.npy')
+        self.binary = np.load('../../split/mtat/binary.npy')
         self.build_model()
 
         # Tensorboard
         self.writer = SummaryWriter()
-
-    def get_dataset(self):
-        if self.dataset == 'mtat':
-            self.valid_list = np.load('./../split/mtat/valid.npy')
-            self.binary = np.load('./../split/mtat/binary.npy')
-        if self.dataset == 'msd':
-            train_file = os.path.join('./../split/msd','filtered_list_train.cP')
-            train_list = pickle.load(open(train_file,'rb'), encoding='bytes')
-            val_set = train_list[201680:]
-            self.valid_list = [value for value in val_set if value.decode() not in skip_files]
-            id2tag_file = os.path.join('./../split/msd', 'msd_id_to_tag_vector.cP')
-            self.id2tag = pickle.load(open(id2tag_file,'rb'), encoding='bytes')
-        if self.dataset == 'jamendo':
-            train_file = os.path.join('./../split/mtg-jamendo', 'autotagging_top50tags-validation.tsv')
-            self.file_dict= read_file(train_file)
-            self.valid_list= list(read_file(train_file).keys())
-            self.mlb = LabelBinarizer().fit(TAGS)
-
-
 
     def get_model(self):
         if self.model_type == 'fcn':
@@ -186,16 +173,16 @@ class Solver(object):
             current_optimizer, drop_counter = self.opt_schedule(current_optimizer, drop_counter)
 
         print("[%s] Train finished. Elapsed: %s"
-                % (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                    datetime.timedelta(seconds=time.time() - start_t)))
+              % (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                 datetime.timedelta(seconds=time.time() - start_t)))
 
     def opt_schedule(self, current_optimizer, drop_counter):
         # adam to sgd
         if current_optimizer == 'adam' and drop_counter == 80:
             self.load(os.path.join(self.model_save_path, 'best_model.pth'))
             self.optimizer = torch.optim.SGD(self.model.parameters(), 0.001,
-                                            momentum=0.9, weight_decay=0.0001,
-                                            nesterov=True)
+                                             momentum=0.9, weight_decay=0.0001,
+                                             nesterov=True)
             current_optimizer = 'sgd_1'
             drop_counter = 0
             print('sgd 1e-3')
@@ -222,15 +209,7 @@ class Solver(object):
 
     def get_tensor(self, fn):
         # load audio
-        if self.dataset == 'mtat':
-            npy_path = os.path.join(self.data_path, 'mtat', 'npy', fn.split('/')[1][:-3]) + 'npy'
-        elif self.dataset == 'msd':
-            msid = fn.decode()
-            filename = '{}/{}/{}/{}.npy'.format(msid[2], msid[3], msid[4], msid)
-            npy_path = os.path.join(self.data_path, filename)
-        elif self.dataset == 'jamendo':
-            filename = self.file_dict[fn]['path']
-            npy_path = os.path.join(self.data_path, filename)
+        npy_path = os.path.join(self.data_path, 'mtat', 'npy', fn.split('/')[1][:-3]) + 'npy'
         raw = np.load(npy_path, mmap_mode='r')
 
         # split chunk
@@ -238,11 +217,11 @@ class Solver(object):
         hop = (length - self.input_length) // self.batch_size
         x = torch.zeros(self.batch_size, self.input_length)
         for i in range(self.batch_size):
-            x[i] = torch.Tensor(raw[i*hop:i*hop+self.input_length]).unsqueeze(0)
+            x[i] = torch.Tensor(raw[i * hop:i * hop + self.input_length]).unsqueeze(0)
         return x
 
     def get_auc(self, est_array, gt_array):
-        roc_aucs  = metrics.roc_auc_score(gt_array, est_array, average='macro')
+        roc_aucs = metrics.roc_auc_score(gt_array, est_array, average='macro')
         pr_aucs = metrics.average_precision_score(gt_array, est_array, average='macro')
         print('roc_auc: %.4f' % roc_aucs)
         print('pr_auc: %.4f' % pr_aucs)
@@ -251,9 +230,9 @@ class Solver(object):
     def print_log(self, epoch, ctr, loss, start_t):
         if (ctr) % self.log_step == 0:
             print("[%s] Epoch [%d/%d] Iter [%d/%d] train loss: %.4f Elapsed: %s" %
-                    (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                        epoch+1, self.n_epochs, ctr, len(self.data_loader), loss.item(),
-                        datetime.timedelta(seconds=time.time()-start_t)))
+                  (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                   epoch + 1, self.n_epochs, ctr, len(self.data_loader), loss.item(),
+                   datetime.timedelta(seconds=time.time() - start_t)))
 
     def validation(self, best_metric, epoch):
         roc_auc, pr_auc, loss = self.get_validation_score(epoch)
@@ -265,7 +244,6 @@ class Solver(object):
                        os.path.join(self.model_save_path, 'best_model.pth'))
         return best_metric
 
-
     def get_validation_score(self, epoch):
         self.model = self.model.eval()
         est_array = []
@@ -274,26 +252,13 @@ class Solver(object):
         reconst_loss = self.get_loss_function()
         index = 0
         for line in tqdm.tqdm(self.valid_list):
-            if self.dataset == 'mtat':
-                ix, fn = line.split('\t')
-            elif self.dataset == 'msd':
-                fn = line
-                if fn.decode() in skip_files:
-                    continue
-            elif self.dataset == 'jamendo':
-                fn = line
+            ix, fn = line.split('\t')
 
             # load and split
             x = self.get_tensor(fn)
 
             # ground truth
-            if self.dataset == 'mtat':
-                ground_truth = self.binary[int(ix)]
-            elif self.dataset == 'msd':
-                ground_truth = self.id2tag[fn].flatten()
-            elif self.dataset == 'jamendo':
-                ground_truth = np.sum(self.mlb.transform(self.file_dict[fn]['tags']), axis=0)
-
+            ground_truth = self.binary[int(ix)]
 
             # forward
             x = self.to_var(x)
@@ -319,4 +284,3 @@ class Solver(object):
         self.writer.add_scalar('AUC/ROC', roc_auc, epoch)
         self.writer.add_scalar('AUC/PR', pr_auc, epoch)
         return roc_auc, pr_auc, loss
-
