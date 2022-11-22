@@ -37,8 +37,8 @@ class Solver(object):
         print(f"CUDA: {self.is_cuda}")
 
         # Build model
-        self.valid_list = np.load('../split/mtat/valid.npy')
-        self.binary = np.load('../split/mtat/binary.npy')
+        self.valid_list = np.load('split/mtat/valid.npy')
+        self.binary = np.load('split/mtat/binary.npy')
         self.build_model()
 
         # Tensorboard
