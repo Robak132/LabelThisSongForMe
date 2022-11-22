@@ -2,20 +2,18 @@
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
 import torchaudio
 
+from src.models.attention_modules import BertConfig, BertEncoder, BertPooler
 from src.models.modules import Conv_1d, ResSE_1d, Conv_2d, Res_2d, Conv_V, Conv_H, HarmonicSTFT, Res_2d_mp
-from src.models.attention_modules import BertConfig, BertEncoder, BertEmbeddings, BertPooler, PositionalEncoding
 
 
 class FCN(nn.Module):
-    '''
+    """
     Choi et al. 2016
     Automatic tagging using deep convolutional neural networks.
     Fully convolutional network.
-    '''
+    """
 
     def __init__(self,
                  sample_rate=16000,
@@ -70,12 +68,12 @@ class FCN(nn.Module):
 
 
 class Musicnn(nn.Module):
-    '''
+    """
     Pons et al. 2017
     End-to-end learning for music audio tagging at scale.
     This is the updated implementation of the original paper. Referred to the Musicnn code.
     https://github.com/jordipons/musicnn
-    '''
+    """
 
     def __init__(self,
                  sample_rate=16000,
@@ -153,11 +151,11 @@ class Musicnn(nn.Module):
 
 
 class CRNN(nn.Module):
-    '''
+    """
     Choi et al. 2017
     Convolution recurrent neural networks for music classification.
     Feature extraction with CNN + temporal summary with RNN
-    '''
+    """
 
     def __init__(self,
                  sample_rate=16000,
@@ -218,11 +216,11 @@ class CRNN(nn.Module):
 
 
 class SampleCNN(nn.Module):
-    '''
+    """
     Lee et al. 2017
     Sample-level deep convolutional neural networks for music auto-tagging using raw waveforms.
     Sample-level CNN.
-    '''
+    """
 
     def __init__(self,
                  n_class=50):
@@ -262,11 +260,11 @@ class SampleCNN(nn.Module):
 
 
 class SampleCNNSE(nn.Module):
-    '''
+    """
     Kim et al. 2018
     Sample-level CNN architectures for music auto-tagging using raw waveforms.
     Sample-level CNN + residual connections + squeeze & excitation.
-    '''
+    """
 
     def __init__(self,
                  n_class=50):
@@ -309,11 +307,11 @@ class SampleCNNSE(nn.Module):
 
 
 class ShortChunkCNN(nn.Module):
-    '''
+    """
     Short-chunk CNN architecture.
     So-called vgg-ish model with a small receptive field.
     Deeper layers, smaller pooling (2x2).
-    '''
+    """
 
     def __init__(self,
                  n_channels=128,
@@ -384,9 +382,9 @@ class ShortChunkCNN(nn.Module):
 
 
 class ShortChunkCNN_Res(nn.Module):
-    '''
+    """
     Short-chunk CNN architecture with residual connections.
-    '''
+    """
 
     def __init__(self,
                  n_channels=128,

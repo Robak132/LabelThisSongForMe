@@ -1,58 +1,16 @@
 # coding: utf-8
+import datetime
 import os
 import time
 import numpy as np
-from sklearn import metrics
-import datetime
-import csv
-import tqdm
 import torch
 import torch.nn as nn
-from torch.utils.tensorboard import SummaryWriter
+import tqdm
+from sklearn import metrics
 from torch.autograd import Variable
+from torch.utils.tensorboard import SummaryWriter
 
 import src.models.model as Model
-
-skip_files = set(['TRAIISZ128F42684BB', 'TRAONEQ128F42A8AB7', 'TRADRNH128E0784511', 'TRBGHEU128F92D778F',
-                  'TRCHYIF128F1464CE7', 'TRCVDKQ128E0790C86', 'TREWVFM128F146816E', 'TREQRIV128F1468B08',
-                  'TREUVBN128F1468AC9', 'TRDKNBI128F14682B0', 'TRFWOAG128F14B12CB', 'TRFIYAF128F14688A6',
-                  'TRGYAEZ128F14A473F', 'TRIXPRK128F1468472', 'TRAQKCW128F9352A52', 'TRLAWQU128F1468AC8',
-                  'TRMSPLW128F14A544A', 'TRLNGQT128F1468261', 'TROTUWC128F1468AB4', 'TRNDAXE128F934C50E',
-                  'TRNHIBI128EF35F57D', 'TRMOREL128F1468AC4', 'TRPNFAG128F146825F', 'TRIXPOY128F14A46C7',
-                  'TROCQVE128F1468AC6', 'TRPCXJI128F14688A8', 'TRQKRKL128F1468AAE', 'TRPKNDC128F145998B',
-                  'TRRUHEH128F1468AAD', 'TRLUSKX128F14A4E50', 'TRMIRQA128F92F11F1', 'TRSRUXF128F1468784',
-                  'TRTNQKQ128F931C74D', 'TRTTUYE128F4244068', 'TRUQZKD128F1468243', 'TRUINWL128F1468258',
-                  'TRVRHOY128F14680BC', 'TRWVEYR128F1458A6F', 'TRVLISA128F1468960', 'TRYDUYU128F92F6BE0',
-                  'TRYOLFS128F9308346', 'TRMVCVS128F1468256', 'TRZSPHR128F1468AAC', 'TRXBJBW128F92EBD96',
-                  'TRYPGJX128F1468479', 'TRYNNNZ128F1468994', 'TRVDOVF128F92DC7F3', 'TRWUHZQ128F1451979',
-                  'TRXMAVV128F146825C', 'TRYNMEX128F14A401D', 'TREGWSL128F92C9D42', 'TRJKZDA12903CFBA43',
-                  'TRBGJIZ128F92E42BC', 'TRVWNOH128E0788B78', 'TRCGBRK128F146A901'])
-
-TAGS = ['genre---downtempo', 'genre---ambient', 'genre---rock', 'instrument---synthesizer', 'genre---atmospheric',
-        'genre---indie', 'instrument---electricpiano', 'genre---newage', 'instrument---strings', 'instrument---drums',
-        'instrument---drummachine', 'genre---techno', 'instrument---guitar', 'genre---alternative',
-        'genre---easylistening', 'genre---instrumentalpop', 'genre---chillout', 'genre---metal', 'mood/theme---happy',
-        'genre---lounge', 'genre---reggae', 'genre---popfolk', 'genre---orchestral', 'instrument---acousticguitar',
-        'genre---poprock', 'instrument---piano', 'genre---trance', 'genre---dance', 'instrument---electricguitar',
-        'genre---soundtrack', 'genre---house', 'genre---hiphop', 'genre---classical', 'mood/theme---energetic',
-        'genre---electronic', 'genre---world', 'genre---experimental', 'instrument---violin', 'genre---folk',
-        'mood/theme---emotional', 'instrument---voice', 'instrument---keyboard', 'genre---pop', 'instrument---bass',
-        'instrument---computer', 'mood/theme---film', 'genre---triphop', 'genre---jazz', 'genre---funk',
-        'mood/theme---relaxing']
-
-
-def read_file(tsv_file):
-    tracks = {}
-    with open(tsv_file) as fp:
-        reader = csv.reader(fp, delimiter='\t')
-        next(reader, None)  # skip header
-        for row in reader:
-            track_id = row[0]
-            tracks[track_id] = {
-                'path': row[3].replace('.mp3', '.npy'),
-                'tags': row[5:],
-            }
-    return tracks
 
 
 class Solver(object):
@@ -61,7 +19,6 @@ class Solver(object):
         self.data_loader = data_loader
         self.dataset = config.dataset
         self.data_path = config.data_path
-        self.input_length = config.input_length
 
         # training settings
         self.n_epochs = config.n_epochs
@@ -73,39 +30,22 @@ class Solver(object):
         self.model_load_path = config.model_load_path
         self.log_step = config.log_step
         self.batch_size = config.batch_size
-        self.model_type = config.model_type
+        self.input_length = config.input_length
 
         # cuda
         self.is_cuda = torch.cuda.is_available()
         print(f"CUDA: {self.is_cuda}")
 
         # Build model
-        self.valid_list = np.load('split/mtat/valid.npy')
-        self.binary = np.load('split/mtat/binary.npy')
+        self.valid_list = np.load('../split/mtat/valid.npy')
+        self.binary = np.load('../split/mtat/binary.npy')
         self.build_model()
 
         # Tensorboard
         self.writer = SummaryWriter()
 
     def get_model(self):
-        if self.model_type == 'fcn':
-            return Model.FCN()
-        elif self.model_type == 'musicnn':
-            return Model.Musicnn(dataset=self.dataset)
-        elif self.model_type == 'crnn':
-            return Model.CRNN()
-        elif self.model_type == 'sample':
-            return Model.SampleCNN()
-        elif self.model_type == 'se':
-            return Model.SampleCNNSE()
-        elif self.model_type == 'short':
-            return Model.ShortChunkCNN()
-        elif self.model_type == 'short_res':
-            return Model.ShortChunkCNN_Res()
-        elif self.model_type == 'attention':
-            return Model.CNNSA()
-        elif self.model_type == 'hcnn':
-            return Model.HarmonicCNN()
+        return Model.Musicnn(dataset=self.dataset)
 
     def build_model(self):
         # model
