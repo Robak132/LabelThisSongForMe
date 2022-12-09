@@ -1,14 +1,15 @@
 import datetime
 import os
 import time
+
 import numpy as np
 import torch
 import torch.nn as nn
 import tqdm
 from torch.utils.tensorboard import SummaryWriter
 
-from models import model as Model
-from src.models.utilites import get_auc
+from src.models.model import Musicnn
+from src.models.utilites import get_auc, to_var
 
 
 class Solver(object):
@@ -44,7 +45,7 @@ class Solver(object):
 
     def build_model(self):
         # model
-        self.model = Model.Musicnn(dataset=self.dataset)
+        self.model = Musicnn(dataset=self.dataset)
 
         # cuda
         if self.is_cuda:
@@ -66,18 +67,11 @@ class Solver(object):
             self.model.spec.mel_scale.fb = s['spec.mel_scale.fb']
         self.model.load_state_dict(s)
 
-    def to_var(self, x):
-        if torch.cuda.is_available():
-            x = x.cuda()
-        return x
-
-    def get_loss_function(self):
-        return nn.BCELoss()
-
     def train(self):
         # Start training
         start_t = time.time()
         best_metric = 0
+        reconst_loss = self.loss_function
 
         # Iterate
         for epoch in range(self.n_epochs):
@@ -86,14 +80,12 @@ class Solver(object):
             for x, y in self.data_loader:
                 ctr += 1
                 # Forward
-                x = self.to_var(x)
-                y = self.to_var(y)
+                x = to_var(x)
+                y = to_var(y)
                 out = self.model(x)
 
                 # Backward
-                print(out)
-                print(y)
-                loss = nn.BCELoss(out, y)
+                loss = reconst_loss(out, y)
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
@@ -148,7 +140,7 @@ class Solver(object):
         est_array = []
         gt_array = []
         losses = []
-        reconst_loss = self.get_loss_function()
+        reconst_loss = self.loss_function
         index = 0
         for line in tqdm.tqdm(self.valid_list):
             ix, fn = line.split('\t')
@@ -160,10 +152,10 @@ class Solver(object):
             ground_truth = self.binary[int(ix)]
 
             # forward
-            x = self.to_var(x)
+            x = to_var(x)
             y = torch.tensor([ground_truth.astype('float32') for _ in range(self.batch_size)]).cuda()
             out = self.model(x)
-            loss = nn.BCELoss(out, y)
+            loss = reconst_loss(out, y)
             losses.append(float(loss.data))
             out = out.detach().cpu()
 

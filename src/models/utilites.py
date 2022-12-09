@@ -1,3 +1,4 @@
+import torch
 from sklearn import metrics
 
 
@@ -7,3 +8,9 @@ def get_auc(est_array, gt_array):
     print('roc_auc: %.4f' % roc_aucs)
     print('pr_auc: %.4f' % pr_aucs)
     return roc_aucs, pr_aucs
+
+
+def to_var(x):
+    if torch.cuda.is_available():
+        x = x.cuda()
+    return x
