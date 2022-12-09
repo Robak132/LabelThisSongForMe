@@ -91,8 +91,9 @@ class Solver(object):
                 out = self.model(x)
 
                 # Backward
+                print(out)
+                print(y)
                 loss = nn.BCELoss(out, y)
-                print(loss)
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
