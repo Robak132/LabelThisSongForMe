@@ -59,7 +59,7 @@ class Solver(object):
             self.load(self.model_load_path)
 
         # loss function
-        self.loss_function = nn.BCELoss
+        self.loss_function = nn.BCELoss()
 
         # optimizers
         self.optimizer = torch.optim.Adam(self.model.parameters(), self.lr, weight_decay=1e-4)
@@ -73,7 +73,7 @@ class Solver(object):
     def to_var(self, x):
         if torch.cuda.is_available():
             x = x.cuda()
-        return Variable(x)
+        return x
 
     def train(self):
         # Start training
@@ -148,7 +148,7 @@ class Solver(object):
         est_array = []
         gt_array = []
         losses = []
-        reconst_loss = self.loss_function()
+        reconst_loss = self.loss_function
         index = 0
         for line in tqdm.tqdm(self.valid_list):
             ix, fn = line.split('\t')
