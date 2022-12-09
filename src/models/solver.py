@@ -96,7 +96,7 @@ class Solver(object):
                 out = self.model(x)
 
                 # Backward
-                loss = reconst_loss(out, y)
+                loss = nn.BCELoss(out, y)
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
@@ -166,7 +166,7 @@ class Solver(object):
             x = self.to_var(x)
             y = torch.tensor([ground_truth.astype('float32') for _ in range(self.batch_size)]).cuda()
             out = self.model(x)
-            loss = reconst_loss(out, y)
+            loss = nn.BCELoss(out, y)
             losses.append(float(loss.data))
             out = out.detach().cpu()
 
