@@ -75,10 +75,13 @@ class Solver(object):
             x = x.cuda()
         return x
 
+    def get_loss_function(self):
+        return nn.BCELoss()
+
     def train(self):
         # Start training
         start_t = time.time()
-        reconst_loss = self.loss_function
+        reconst_loss = self.get_loss_function()
         best_metric = 0
 
         # Iterate
@@ -148,7 +151,7 @@ class Solver(object):
         est_array = []
         gt_array = []
         losses = []
-        reconst_loss = self.loss_function
+        reconst_loss = self.get_loss_function()
         index = 0
         for line in tqdm.tqdm(self.valid_list):
             ix, fn = line.split('\t')
