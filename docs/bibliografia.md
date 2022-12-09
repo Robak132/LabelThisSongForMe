@@ -20,7 +20,7 @@ Porównanie różnych modeli tagowania (FCN, CRNN, Sample-level CNN, atencja). Z
 
 *George Tzanetakis and Perry Cook* 
 
-Klasyfikacja gatunków na podstawie charakterystyk wyliczanych z utworu (Spectral Centroid, Spectral Rolloff, Spectral Flux,  Time Domain Zero Crossings, Mel-Frequency Cepstral Coefficients). Tworzenie histogramów dla poszczególnych gatunków. The Genres dataset.
+Klasyfikacja gatunków na podstawie charakterystyk wyliczanych z utworu (Spectral Centroid, Spectral Rolloff, Spectral Flux, Time Domain Zero Crossings, Mel-Frequency Cepstral Coefficients). Tworzenie histogramów dla poszczególnych gatunków. The Genres dataset.
 
 ---
 
