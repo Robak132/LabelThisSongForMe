@@ -5,10 +5,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 import tqdm
-from torch.autograd import Variable
 from torch.utils.tensorboard import SummaryWriter
 
-import src.models.model as Model
+from models import model as Model
 from src.models.utilites import get_auc
 
 
@@ -43,12 +42,9 @@ class Solver(object):
         # Tensorboard
         self.writer = SummaryWriter()
 
-    def get_model(self):
-        return Model.Musicnn(dataset=self.dataset)
-
     def build_model(self):
         # model
-        self.model = self.get_model()
+        self.model = Model.Musicnn(dataset=self.dataset)
 
         # cuda
         if self.is_cuda:
@@ -81,7 +77,6 @@ class Solver(object):
     def train(self):
         # Start training
         start_t = time.time()
-        reconst_loss = self.get_loss_function()
         best_metric = 0
 
         # Iterate
@@ -97,6 +92,7 @@ class Solver(object):
 
                 # Backward
                 loss = nn.BCELoss(out, y)
+                print(loss)
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
