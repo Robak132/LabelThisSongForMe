@@ -38,4 +38,4 @@ class Processor:
 
 if __name__ == '__main__':
     p = Processor()
-    p.iterate("data")
+    p.iterate("../data")

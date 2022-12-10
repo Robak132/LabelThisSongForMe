@@ -8,8 +8,7 @@ import torch.nn as nn
 import tqdm
 from sklearn import metrics
 from torch.autograd import Variable
-
-import src.models.model as Model
+from models.model import Musicnn
 
 
 class Predict(object):
@@ -24,7 +23,7 @@ class Predict(object):
 
     def get_model(self):
         self.input_length = 3 * 16000
-        return Model.Musicnn(dataset=self.dataset)
+        return Musicnn(dataset=self.dataset)
 
     def build_model(self):
         self.model = self.get_model()
