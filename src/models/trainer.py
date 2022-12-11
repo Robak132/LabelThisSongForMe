@@ -40,8 +40,8 @@ class Trainer(object):
         print(f"CUDA: {self.is_cuda}")
 
         # Build model
-        self.valid_list = np.load('split/mtat/valid.npy')
-        self.binary = np.load('split/mtat/binary.npy')
+        self.valid_list = np.load('split/mtat/valid.npy', allow_pickle=True)
+        self.binary = np.load('split/mtat/binary.npy', allow_pickle=True)
         self.build_model()
 
         # Tensorboard
@@ -110,7 +110,7 @@ class Trainer(object):
 
     def get_tensor(self, fn):
         # load audio
-        npy_path = os.path.join(self.data_path, 'mtat', 'npy', fn.split('/')[1][:-3]) + 'npy'
+        npy_path = os.path.join(self.data_path, 'mtat', 'npy', fn.split('/')[0], fn.split('/')[1][:-3]) + 'npy'
         raw = np.load(npy_path, mmap_mode='r')
 
         # split chunk
