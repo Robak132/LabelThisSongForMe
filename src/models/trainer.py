@@ -26,7 +26,6 @@ class Trainer(object):
         # training settings
         self.n_epochs = config.n_epochs
         self.lr = config.lr
-        self.use_tensorboard = config.use_tensorboard
 
         # model path and step size
         self.model_save_path = config.model_save_path

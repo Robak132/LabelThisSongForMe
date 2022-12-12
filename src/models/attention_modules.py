@@ -234,7 +234,7 @@ class PositionalEncoding(nn.Module):
 
     @staticmethod
     def position_encoding_init(n_position, emb_dim):
-        ''' Init the sinusoid position encoding table '''
+        """ Init the sinusoid position encoding table """
 
         # keep dim 0 for padding token position encoding zero vector
         position_enc = np.array([
