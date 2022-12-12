@@ -40,8 +40,8 @@ class Trainer(object):
         print(f"CUDA: {self.is_cuda}")
 
         # Build model
-        self.valid_list = np.load('split/mtat/valid.npy', allow_pickle=True)
-        self.binary = np.load('split/mtat/binary.npy', allow_pickle=True)
+        self.valid_list = np.load('split/mtat-mini/valid.npy', allow_pickle=True)
+        self.binary = np.load('split/mtat-mini/binary.npy', allow_pickle=True)
         self.build_model()
 
         # Tensorboard
@@ -144,9 +144,7 @@ class Trainer(object):
         losses = []
         reconstruction_loss = self.loss_function
         index = 0
-        for line in tqdm.tqdm(self.valid_list):
-            ix, fn = line.split('\t')
-
+        for ix, fn in tqdm.tqdm(self.valid_list):
             # load and split
             x = self.get_tensor(fn)
 
@@ -155,7 +153,7 @@ class Trainer(object):
 
             # forward
             x = to_var(x)
-            y = torch.tensor([ground_truth.astype('float32') for _ in range(self.batch_size)]).cuda()
+            y = torch.tensor(np.array([ground_truth.astype('float32') for _ in range(self.batch_size)])).cuda()
             out = self.model(x)
             loss = reconstruction_loss(out, y)
             losses.append(float(loss.data))

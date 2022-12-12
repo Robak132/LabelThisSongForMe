@@ -8,7 +8,7 @@ class AudioFolder(data.Dataset):
         self.root = root
         self.input_length = input_length
         self.fl = np.load(filename, allow_pickle=True)
-        self.binary = np.load('split/mtat/binary.npy')
+        self.binary = np.load('split/mtat-mini/binary.npy')
 
     def __getitem__(self, index):
         npy, tag_binary = self.get_npy(index)

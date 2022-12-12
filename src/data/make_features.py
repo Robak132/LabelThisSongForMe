@@ -6,8 +6,6 @@ import librosa
 import numpy as np
 import tqdm
 
-warnings.filterwarnings('ignore')
-
 
 class PreProcessor:
     def __init__(self, data_path):
@@ -24,7 +22,7 @@ class PreProcessor:
         return files
 
     def get_npy(self, fn):
-        x, sr = librosa.core.load(fn, sr=self.fs)
+        x, sr = librosa.load(fn, sr=self.fs)
         return x
 
     def run(self, *args):
@@ -35,7 +33,7 @@ class PreProcessor:
             npy_fn = os.path.join(self.npy_path, fn.split('/')[-2], fn.split('/')[-1][:-3]+'npy')
             if not os.path.exists(npy_fn):
                 try:
-                    os.makedirs(npy_fn[:-1], exist_ok=True)
+                    os.makedirs(os.path.join(*npy_fn.split("/")[:-1]), exist_ok=True)
                     x = self.get_npy(fn)
                     np.save(open(npy_fn, 'wb'), x)
                 except RuntimeError and EOFError:
