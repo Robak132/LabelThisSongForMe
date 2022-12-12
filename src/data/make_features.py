@@ -6,6 +6,8 @@ import librosa
 import numpy as np
 import tqdm
 
+warnings.simplefilter(action='ignore', category=UserWarning)
+
 
 class PreProcessor:
     def __init__(self, data_path):

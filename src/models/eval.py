@@ -53,7 +53,7 @@ class Predict(object):
     def get_tensor(self, fn):
         # load audio
         npy_path = os.path.join(self.data_path, 'mtat', 'npy', fn.split('/')[1][:-3]) + 'npy'
-        raw = np.load(npy_path, mmap_mode='r')
+        raw = np.load(npy_path, mmap_mode='c')
 
         # split chunk
         length = len(raw)

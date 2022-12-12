@@ -136,3 +136,6 @@ dask-worker-space
 
 # JetBrains
 /.idea
+
+# Logs
+/runs

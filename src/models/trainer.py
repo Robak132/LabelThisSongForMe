@@ -111,7 +111,7 @@ class Trainer(object):
     def get_tensor(self, fn):
         # load audio
         npy_path = os.path.join(self.data_path, 'mtat', 'npy', fn.split('/')[0], fn.split('/')[1][:-3]) + 'npy'
-        raw = np.load(npy_path, mmap_mode='r')
+        raw = np.load(npy_path, mmap_mode='c')
 
         # split chunk
         length = len(raw)
@@ -156,7 +156,7 @@ class Trainer(object):
             y = torch.tensor(np.array([ground_truth.astype('float32') for _ in range(self.batch_size)])).cuda()
             out = self.model(x)
             loss = reconstruction_loss(out, y)
-            losses.append(float(loss.data))
+            losses.append(float(loss))
             out = out.detach().cpu()
 
             # estimate

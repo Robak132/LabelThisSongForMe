@@ -17,7 +17,7 @@ class AudioFolder(data.Dataset):
     def get_npy(self, index):
         ix, fn = self.fl[index]
         npy_path = os.path.join(self.root, 'mtat', 'npy', fn.split('/')[0], fn.split('/')[1][:-3]) + 'npy'
-        npy = np.load(npy_path, mmap_mode='r')
+        npy = np.load(npy_path, mmap_mode='c')
         random_idx = int(np.floor(np.random.random(1) * (len(npy) - self.input_length)))
         npy = np.array(npy[random_idx:random_idx + self.input_length])
         tag_binary = self.binary[int(ix)]
