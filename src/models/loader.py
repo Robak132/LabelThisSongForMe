@@ -4,11 +4,11 @@ from torch.utils import data
 
 
 class AudioFolder(data.Dataset):
-    def __init__(self, root, filename, input_length=None):
+    def __init__(self, root, train_path, binary_path, input_length=None):
         self.root = root
         self.input_length = input_length
-        self.fl = np.load(filename, allow_pickle=True)
-        self.binary = np.load('split/mtat-mini/binary.npy')
+        self.fl = np.load(train_path, allow_pickle=True)
+        self.binary = np.load(binary_path)
 
     def __getitem__(self, index):
         npy, tag_binary = self.get_npy(index)
@@ -27,8 +27,13 @@ class AudioFolder(data.Dataset):
         return len(self.fl)
 
 
-def get_audio_loader(root, batch_size, filename, num_workers=0, input_length=None):
-    data_loader = data.DataLoader(dataset=AudioFolder(root, filename=filename, input_length=input_length),
+def get_audio_loader(root, batch_size, train_path, binary_path, num_workers=0, input_length=None):
+    dataset = AudioFolder(root,
+                          train_path=train_path,
+                          binary_path=binary_path,
+                          input_length=input_length)
+
+    data_loader = data.DataLoader(dataset=dataset,
                                   batch_size=batch_size,
                                   shuffle=True,
                                   drop_last=False,

@@ -12,7 +12,6 @@ Artykuł opisujący problem tagowania, zawiera porównanie architektur FCN. Eksp
 *Minz Won, Andres Ferraro, Dmitry Bogdanov, Xavier Serra*
 
 Porównanie różnych modeli tagowania (FCN, CRNN, Sample-level CNN, atencja). Zbiory MagnaTagATune, Million Song Dataset, MTG-Jamendo Dataset.
- 
 
 ---
 

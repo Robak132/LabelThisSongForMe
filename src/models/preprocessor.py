@@ -10,28 +10,26 @@ warnings.simplefilter(action='ignore', category=UserWarning)
 
 
 class PreProcessor:
-    def __init__(self, data_path):
+    def __init__(self, config):
         self.fs = 16000
-        self.data_path = data_path
+        self.data_path = config.data_path
+        self.files = self.get_file_paths([config.train_path, config.valid_path, config.test_path])
 
-    def get_file_paths(self, *args):
+    def get_file_paths(self, npy_files):
         files = []
-        if len(args) != 0:
-            for arg in args:
-                files += list(os.path.join(self.data_path, 'mtat', 'mp3', filename) for filename in np.load(arg, allow_pickle=True)[:, 1])
-        else:
-            files = glob(os.path.join(self.data_path, 'mtat', 'mp3', '*/*.mp3'))
+        for npy_file in npy_files:
+            for filename in np.load(npy_file, allow_pickle=True)[:, 1]:
+                files.append(os.path.join(self.data_path, 'mtat/mp3', filename))
         return files
 
     def get_npy(self, fn):
         x, sr = librosa.load(fn, sr=self.fs)
         return x
 
-    def run(self, *args):
-        files = self.get_file_paths(*args)
-        self.npy_path = os.path.join(self.data_path, 'mtat', 'npy')
+    def run(self, ):
+        self.npy_path = os.path.join(self.data_path, 'mtat/npy')
 
-        for fn in tqdm.tqdm(files):
+        for fn in tqdm.tqdm(self.files):
             npy_fn = os.path.join(self.npy_path, fn.split('/')[-2], fn.split('/')[-1][:-3]+'npy')
             if not os.path.exists(npy_fn):
                 try:
@@ -42,8 +40,3 @@ class PreProcessor:
                     # some audio files are broken
                     print(fn)
                     continue
-
-
-if __name__ == '__main__':
-    p = PreProcessor("data")
-    p.run("split/mtat-mini/train.npy", "split/mtat-mini/valid.npy", "split/mtat-mini/test.npy")

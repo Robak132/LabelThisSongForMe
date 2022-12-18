@@ -5,22 +5,24 @@ import time
 import numpy as np
 import torch
 import torch.nn as nn
-import tqdm
 from torch.utils.tensorboard import SummaryWriter
 
-from src.models.model import Musicnn
-from src.models.utilites import get_auc, to_var
+from src.models.common import to_var, get_test_score
+from src.models.loader import get_audio_loader
 
 
-class Trainer(object):
-    def __init__(self, data_loader, config):
+class Trainer:
+    def __init__(self, config):
         # create folders if they don't exist
-        if not os.path.exists(config.model_save_path):
-            os.makedirs(config.model_save_path)
+        os.makedirs(os.path.join(*config.model_save_path.split("/")[:-1]), exist_ok=True)
 
         # data loader
-        self.data_loader = data_loader
-        self.dataset = config.dataset
+        self.data_loader = get_audio_loader(config.data_path,
+                                            batch_size=config.batch_size,
+                                            train_path=config.train_path,
+                                            binary_path=config.binary_path,
+                                            num_workers=config.num_workers,
+                                            input_length=config.input_length)
         self.data_path = config.data_path
 
         # training settings
@@ -29,7 +31,6 @@ class Trainer(object):
 
         # model path and step size
         self.model_save_path = config.model_save_path
-        self.model_load_path = config.model_load_path
         self.log_step = config.log_step
         self.batch_size = config.batch_size
         self.input_length = config.input_length
@@ -39,24 +40,20 @@ class Trainer(object):
         print(f"CUDA: {self.is_cuda}")
 
         # Build model
-        self.valid_list = np.load('split/mtat-mini/valid.npy', allow_pickle=True)
-        self.binary = np.load('split/mtat-mini/binary.npy', allow_pickle=True)
-        self.build_model()
+        self.valid_list = np.load(config.valid_path, allow_pickle=True)
+        self.binary = np.load(config.binary_path, allow_pickle=True)
+        self.build_model(config.model)
 
         # Tensorboard
         self.writer = SummaryWriter()
 
-    def build_model(self):
+    def build_model(self, model):
         # model
-        self.model = Musicnn(dataset=self.dataset)
+        self.model = model
 
         # cuda
         if self.is_cuda:
             self.model.cuda()
-
-        # load pretrained model
-        if len(self.model_load_path) > 1:
-            self.load(self.model_load_path)
 
         # loss function
         self.loss_function = nn.BCELoss()
@@ -107,19 +104,6 @@ class Trainer(object):
         print(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Train finished. "
               f"Elapsed: {datetime.timedelta(seconds=time.time() - start_t)}")
 
-    def get_tensor(self, fn):
-        # load audio
-        npy_path = os.path.join(self.data_path, 'mtat', 'npy', fn.split('/')[0], fn.split('/')[1][:-3]) + 'npy'
-        raw = np.load(npy_path, mmap_mode='c')
-
-        # split chunk
-        length = len(raw)
-        hop = (length - self.input_length) // self.batch_size
-        x = torch.zeros(self.batch_size, self.input_length)
-        for i in range(self.batch_size):
-            x[i] = torch.Tensor(raw[i * hop:i * hop + self.input_length]).unsqueeze(0)
-        return x
-
     def print_log(self, epoch, ctr, loss, start_t):
         if ctr % self.log_step == 0:
             print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] "
@@ -127,50 +111,24 @@ class Trainer(object):
                   f"train loss: {loss.item():.4f} Elapsed: {datetime.timedelta(seconds=time.time() - start_t)}")
 
     def validation(self, best_metric, epoch):
-        roc_auc, pr_auc, loss = self.get_validation_score(epoch)
-        score = 1 - loss
-        if score > best_metric:
-            print('best model!')
-            best_metric = score
-            torch.save(self.model.state_dict(),
-                       os.path.join(self.model_save_path, 'best_model.pth'))
-        return best_metric
-
-    def get_validation_score(self, epoch):
         self.model = self.model.eval()
-        est_array = []
-        gt_array = []
-        losses = []
-        reconstruction_loss = self.loss_function
-        index = 0
-        for ix, fn in tqdm.tqdm(self.valid_list):
-            # load and split
-            x = self.get_tensor(fn)
-
-            # ground truth
-            ground_truth = self.binary[int(ix)]
-
-            # forward
-            x = to_var(x)
-            y = torch.tensor(np.array([ground_truth.astype('float32') for _ in range(self.batch_size)])).cuda()
-            out = self.model(x)
-            loss = reconstruction_loss(out, y)
-            losses.append(float(loss))
-            out = out.detach().cpu()
-
-            # estimate
-            estimated = np.array(out).mean(axis=0)
-            est_array.append(estimated)
-
-            gt_array.append(ground_truth)
-            index += 1
-
-        est_array, gt_array = np.array(est_array), np.array(gt_array)
-        loss = np.mean(losses)
-        print('loss: %.4f' % loss)
-
-        roc_auc, pr_auc = get_auc(est_array, gt_array)
+        roc_auc, pr_auc, loss = get_test_score(self.loss_function,
+                                               self.valid_list,
+                                               self.data_path,
+                                               self.input_length,
+                                               self.batch_size,
+                                               self.model,
+                                               self.binary)
+        print(f'loss: {loss:.4f}')
+        print(f'roc_auc: {roc_auc:.4f}')
+        print(f'pr_auc: {pr_auc:.4f}')
         self.writer.add_scalar('Loss/valid', loss, epoch)
         self.writer.add_scalar('AUC/ROC', roc_auc, epoch)
         self.writer.add_scalar('AUC/PR', pr_auc, epoch)
-        return roc_auc, pr_auc, loss
+
+        score = 1 - loss
+        if score > best_metric:
+            print('Found new best model')
+            best_metric = score
+            torch.save(self.model.state_dict(), os.path.join(self.model_save_path))
+        return best_metric
