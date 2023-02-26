@@ -31,11 +31,11 @@ if __name__ == '__main__':
                     lr=1e-4,
                     model_save_path="models/musicnn.pth",
                     data_path='data',
-                    log_step=20,
+                    log_step=100,
                     input_length=3 * 16000,
-                    train_path="split/mtat-mini/train.npy",
-                    valid_path="split/mtat-mini/valid.npy",
-                    test_path="split/mtat-mini/test.npy",
+                    train_path="split/mtat/train.npy",
+                    valid_path="split/mtat/valid.npy",
+                    test_path="split/mtat/test.npy",
                     binary_path="split/mtat/binary.npy")
 
     p = PreProcessor(config)
