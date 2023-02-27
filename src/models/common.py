@@ -1,9 +1,12 @@
 import os
 
+import librosa
 import numpy as np
 import torch
+from numpy import ndarray
 from sklearn import metrics
 import tqdm
+from torch import Tensor
 
 
 def get_auc(est_array, gt_array):
@@ -18,7 +21,7 @@ def to_var(x):
     return x
 
 
-def load_tensor_chunked(data_path, file_path, input_length, batch_size):
+def load_tensor_chunked(data_path, file_path, input_length, batch_size) -> Tensor:
     # load audio
     npy_path = os.path.join(data_path, 'mtat', 'npy', file_path.split('/')[0], file_path.split('/')[1][:-3]) + 'npy'
     raw = np.load(npy_path, mmap_mode='c')
@@ -56,3 +59,8 @@ def get_test_score(loss_function, test_list, data_path, input_length, batch_size
     loss = np.mean(losses)
     roc_auc, pr_auc = get_auc(np.array(est_array), np.array(gt_array))
     return roc_auc, pr_auc, loss
+
+
+def convert_mp3_to_npy(mp3_file, sr) -> ndarray:
+    x, sr = librosa.load(mp3_file, sr=sr)
+    return x

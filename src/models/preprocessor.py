@@ -26,7 +26,7 @@ class PreProcessor:
         x, sr = librosa.load(fn, sr=self.fs)
         return x
 
-    def run(self, ):
+    def run(self):
         self.npy_path = os.path.join(self.data_path, 'mtat/npy')
 
         for fn in tqdm.tqdm(self.files):

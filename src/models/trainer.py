@@ -61,12 +61,6 @@ class Trainer:
         # optimizers
         self.optimizer = torch.optim.Adam(self.model.parameters(), self.lr, weight_decay=1e-4)
 
-    def load(self, filename):
-        s = torch.load(filename)
-        if 'spec.mel_scale.fb' in s.keys():
-            self.model.spec.mel_scale.fb = s['spec.mel_scale.fb']
-        self.model.load_state_dict(s)
-
     def train(self):
         # Start training
         start_t = time.time()
@@ -77,8 +71,7 @@ class Trainer:
         for epoch in range(self.n_epochs):
             ctr = 0
             loss = None
-            self.model = self.model.train()
-
+            self.model.train()
             for x, y in self.data_loader:
                 ctr += 1
                 # Forward
@@ -111,7 +104,7 @@ class Trainer:
                   f"train loss: {loss.item():.4f} Elapsed: {datetime.timedelta(seconds=time.time() - start_t)}")
 
     def validation(self, best_metric, epoch):
-        self.model = self.model.eval()
+        self.model.eval()
         roc_auc, pr_auc, loss = get_test_score(self.loss_function,
                                                self.valid_list,
                                                self.data_path,

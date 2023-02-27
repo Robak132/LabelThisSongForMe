@@ -36,7 +36,6 @@ markdown-it-py==2.2.0
 MarkupSafe==2.1.2
 matplotlib==3.7.0
 mdurl==0.1.2
-mpmath==1.2.1
 msgpack==1.0.4
 numba==0.56.4
 numpy==1.23.5
@@ -94,5 +93,6 @@ tzdata==2022.7
 tzlocal==4.2
 urllib3==1.26.14
 validators==0.20.0
+watchdog==2.3.0
 Werkzeug==2.2.3
 zipp==3.15.0

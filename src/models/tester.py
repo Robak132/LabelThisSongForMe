@@ -1,9 +1,8 @@
 import numpy as np
 import torch
 import torch.nn as nn
-import tqdm
 
-from models.common import to_var, get_auc, load_tensor_chunked, get_test_score
+from models.common import get_test_score
 
 
 class Tester:
@@ -23,7 +22,7 @@ class Tester:
         self.model = model
 
         # load model
-        self.load(self.model_save_path)
+        self.load_model(self.model_save_path)
 
         # loss function
         self.loss_function = nn.BCELoss()
@@ -32,7 +31,7 @@ class Tester:
         if self.is_cuda:
             self.model.cuda()
 
-    def load(self, filename):
+    def load_model(self, filename):
         s = torch.load(filename)
         if 'spec.mel_scale.fb' in s.keys():
             self.model.spec.mel_scale.fb = s['spec.mel_scale.fb']
