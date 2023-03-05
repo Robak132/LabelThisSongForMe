@@ -7,8 +7,9 @@ import torch
 import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 
-from src.models.common import to_var, get_test_score
-from src.models.loader import get_audio_loader
+from models.tester import Tester, Statistics
+from models.common import move_to_cuda, current_time
+from models.loader import get_audio_loader
 
 
 class Trainer:
@@ -47,6 +48,9 @@ class Trainer:
         # Tensorboard
         self.writer = SummaryWriter()
 
+        # Validator
+        self.validator = Tester(config)
+
     def build_model(self, model):
         # model
         self.model = model
@@ -65,8 +69,6 @@ class Trainer:
         # Start training
         start_t = time.time()
         best_metric = 0
-        reconstruction_loss = self.loss_function
-
         # Iterate
         for epoch in range(self.n_epochs):
             ctr = 0
@@ -75,53 +77,47 @@ class Trainer:
             for x, y in self.data_loader:
                 ctr += 1
                 # Forward
-                x = to_var(x)
-                y = to_var(y)
+                x = move_to_cuda(x)
+                y = move_to_cuda(y)
                 out = self.model(x)
 
                 # Backward
-                loss = reconstruction_loss(out, y)
+                loss = self.loss_function(out, y)
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
 
                 # Log
-                self.print_log(epoch, ctr, loss, start_t)
+                if ctr % self.log_step == 0:
+                    self.print_training_log(epoch, ctr, loss, start_t)
 
             if loss is not None:
                 self.writer.add_scalar('Loss/train', loss.item(), epoch)
 
-            # validation
+            # Validation
             best_metric = self.validation(best_metric, epoch)
 
-        print(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Train finished. "
+        print(f"{current_time()}] Train finished. Elapsed: {datetime.timedelta(seconds=time.time() - start_t)}")
+
+    def print_training_log(self, epoch, ctr, loss, start_t):
+        print(f"[{current_time()}] "
+              f"Epoch [{epoch + 1}/{self.n_epochs}] "
+              f"Iter [{ctr}/{len(self.data_loader)}] "
+              f"Loss/train: {loss.item():.4f} "
               f"Elapsed: {datetime.timedelta(seconds=time.time() - start_t)}")
 
-    def print_log(self, epoch, ctr, loss, start_t):
-        if ctr % self.log_step == 0:
-            print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] "
-                  f"Epoch [{epoch + 1}/{self.n_epochs}] Iter [{ctr}/{len(self.data_loader)}] "
-                  f"train loss: {loss.item():.4f} Elapsed: {datetime.timedelta(seconds=time.time() - start_t)}")
+    def add_to_writer(self, stats: Statistics, epoch: int):
+        self.writer.add_scalar('Loss/valid', stats.mean_loss, epoch)
+        self.writer.add_scalar('AUC/ROC', stats.roc_auc, epoch)
+        self.writer.add_scalar('AUC/PR', stats.pr_auc, epoch)
 
-    def validation(self, best_metric, epoch):
-        self.model.eval()
-        roc_auc, pr_auc, loss = get_test_score(self.loss_function,
-                                               self.valid_list,
-                                               self.data_path,
-                                               self.input_length,
-                                               self.batch_size,
-                                               self.model,
-                                               self.binary)
-        print(f'loss: {loss:.4f}')
-        print(f'roc_auc: {roc_auc:.4f}')
-        print(f'pr_auc: {pr_auc:.4f}')
-        self.writer.add_scalar('Loss/valid', loss, epoch)
-        self.writer.add_scalar('AUC/ROC', roc_auc, epoch)
-        self.writer.add_scalar('AUC/PR', pr_auc, epoch)
+    def validation(self, best_metric, epoch: int):
+        _, stats = self.validator.test(self.model)
+        self.add_to_writer(stats, epoch)
 
-        score = 1 - loss
+        score = 1 - stats.mean_loss
         if score > best_metric:
-            print('Found new best model')
+            print(f'[{current_time()}] Found new best model')
             best_metric = score
             torch.save(self.model.state_dict(), os.path.join(self.model_save_path))
         return best_metric

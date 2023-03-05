@@ -1,17 +1,17 @@
 import os
 import warnings
-from glob import glob
 
-import librosa
 import numpy as np
 import tqdm
+
+from models.common import convert_mp3_to_npy
 
 warnings.simplefilter(action='ignore', category=UserWarning)
 
 
 class PreProcessor:
     def __init__(self, config):
-        self.fs = 16000
+        self.sr = 16000
         self.data_path = config.data_path
         self.files = self.get_file_paths([config.train_path, config.valid_path, config.test_path])
 
@@ -22,10 +22,6 @@ class PreProcessor:
                 files.append(os.path.join(self.data_path, 'mtat/mp3', filename))
         return files
 
-    def get_npy(self, fn):
-        x, sr = librosa.load(fn, sr=self.fs)
-        return x
-
     def run(self):
         self.npy_path = os.path.join(self.data_path, 'mtat/npy')
 
@@ -34,7 +30,7 @@ class PreProcessor:
             if not os.path.exists(npy_fn):
                 try:
                     os.makedirs(os.path.join(*npy_fn.split("/")[:-1]), exist_ok=True)
-                    x = self.get_npy(fn)
+                    x = convert_mp3_to_npy(fn, self.sr)
                     np.save(open(npy_fn, 'wb'), x)
                 except RuntimeError and EOFError:
                     # some audio files are broken
