@@ -8,62 +8,46 @@ import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 
 from models.tester import Tester, Statistics
-from models.common import move_to_cuda, current_time
+from models.common import move_to_cuda, current_time, Config
 from models.loader import get_audio_loader
 
 
 class Trainer:
-    def __init__(self, config):
+    def __init__(self, config: Config = None):
+        if config is None:
+            config = Config()
+
         # create folders if they don't exist
         os.makedirs(os.path.join(*config.model_save_path.split("/")[:-1]), exist_ok=True)
 
         # data loader
-        self.data_loader = get_audio_loader(config.data_path,
+        self.data_loader = get_audio_loader(data_path=config.data_path,
                                             batch_size=config.batch_size,
-                                            train_path=config.train_path,
+                                            files_path=config.train_path,
                                             binary_path=config.binary_path,
                                             num_workers=config.num_workers,
                                             input_length=config.input_length)
-        self.data_path = config.data_path
-
         # training settings
         self.n_epochs = config.n_epochs
-        self.lr = config.lr
 
         # model path and step size
         self.model_save_path = config.model_save_path
         self.log_step = config.log_step
-        self.batch_size = config.batch_size
-        self.input_length = config.input_length
 
         # cuda
         self.is_cuda = torch.cuda.is_available()
-        print(f"CUDA: {self.is_cuda}")
+        print(f"[{current_time()}] Trainer initialised with CUDA: {self.is_cuda}")
 
-        # Build model
-        self.valid_list = np.load(config.valid_path, allow_pickle=True)
-        self.binary = np.load(config.binary_path, allow_pickle=True)
-        self.build_model(config.model)
+        # model
+        self.model = move_to_cuda(config.model)
+        self.loss_function = nn.BCELoss()
+        self.optimizer = torch.optim.Adam(self.model.parameters(), config.lr, weight_decay=1e-4)
 
         # Tensorboard
         self.writer = SummaryWriter()
 
         # Validator
-        self.validator = Tester(config)
-
-    def build_model(self, model):
-        # model
-        self.model = model
-
-        # cuda
-        if self.is_cuda:
-            self.model.cuda()
-
-        # loss function
-        self.loss_function = nn.BCELoss()
-
-        # optimizers
-        self.optimizer = torch.optim.Adam(self.model.parameters(), self.lr, weight_decay=1e-4)
+        self.validator = Tester(config, "VALID")
 
     def train(self):
         # Start training
@@ -76,9 +60,10 @@ class Trainer:
             self.model.train()
             for x, y in self.data_loader:
                 ctr += 1
-                # Forward
                 x = move_to_cuda(x)
                 y = move_to_cuda(y)
+
+                # Forward
                 out = self.model(x)
 
                 # Backward

@@ -19,11 +19,11 @@ if __name__ == '__main__':
                     test_path="split/mtat/test.npy",
                     binary_path="split/mtat/binary.npy")
 
-    p = PreProcessor(config)
-    p.run()
+    # p = PreProcessor(config)
+    # p.run()
+    #
+    # trainer = Trainer(config)
+    # trainer.train()
 
-    trainer = Trainer(config)
-    trainer.train()
-
-    tester = Tester(config)
+    tester = Tester(config, "TEST")
     tester.test()
