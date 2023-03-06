@@ -8,6 +8,7 @@ from matplotlib import pyplot as plt
 from numpy import ndarray
 from sklearn import metrics
 from torch import tensor, Tensor
+from torch.nn import Module
 
 from external.model import Musicnn
 
@@ -23,14 +24,15 @@ class Statistics:
 @dataclass
 class Config:
     num_workers: int = 0
-    model: Musicnn = Musicnn(dataset='mtat')
+    model: Module = Musicnn()
     n_epochs: int = 5
     batch_size: int = 16
     lr: float = 1e-4
     model_save_path: str = "models/musicnn.pth"
     data_path: str = 'data'
     log_step: int = 100
-    input_length: int = 3 * 16000
+    sr: int = 16000
+    input_length: int = 3 * sr
     train_path: str = "split/mtat/train.npy"
     valid_path: str = "split/mtat/valid.npy"
     test_path: str = "split/mtat/test.npy"

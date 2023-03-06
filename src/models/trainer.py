@@ -2,14 +2,13 @@ import datetime
 import os
 import time
 
-import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 
-from models.tester import Tester, Statistics
 from models.common import move_to_cuda, current_time, Config
 from models.loader import get_audio_loader
+from models.tester import Tester, Statistics
 
 
 class Trainer:

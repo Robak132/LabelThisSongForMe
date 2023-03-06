@@ -1,13 +1,9 @@
 import argparse
 
-import numpy as np
-import torch
 from matplotlib import pyplot as plt
-from numpy import float64
 
-from models.common import Config, create_tagogram, plot_probability_graph
+from models.common import create_tagogram, plot_probability_graph
 from models.tester import Tester
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Script to tag music using selected model')

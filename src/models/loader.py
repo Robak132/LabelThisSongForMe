@@ -16,7 +16,7 @@ class AudioFolder(data.Dataset):
         ix, fn = self.files[index]
         npy_path = os.path.join(self.data_path, 'mtat', 'npy', fn.split('/')[0], fn.split('/')[1][:-3]) + 'npy'
         data_chunk = get_random_data_chunk(np.load(npy_path, mmap_mode='c'), self.input_length)
-        return data_chunk.astype('float32'), self.binary[int(ix)].astype('float32')
+        return data_chunk, self.binary[int(ix)].astype('float32')
 
     def __len__(self):
         return len(self.files)

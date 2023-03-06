@@ -11,7 +11,7 @@ warnings.simplefilter(action='ignore', category=UserWarning)
 
 class PreProcessor:
     def __init__(self, config):
-        self.sr = 16000
+        self.sr = config.sr
         self.data_path = config.data_path
         self.files = self.get_file_paths([config.train_path, config.valid_path, config.test_path])
 
@@ -23,10 +23,10 @@ class PreProcessor:
         return files
 
     def run(self):
-        self.npy_path = os.path.join(self.data_path, 'mtat/npy')
+        npy_path = os.path.join(self.data_path, 'mtat/npy')
 
         for fn in tqdm.tqdm(self.files):
-            npy_fn = os.path.join(self.npy_path, fn.split('/')[-2], fn.split('/')[-1][:-3]+'npy')
+            npy_fn = os.path.join(npy_path, fn.split('/')[-2], fn.split('/')[-1][:-3]+'npy')
             if not os.path.exists(npy_fn):
                 try:
                     os.makedirs(os.path.join(*npy_fn.split("/")[:-1]), exist_ok=True)

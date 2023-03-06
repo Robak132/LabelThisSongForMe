@@ -1,32 +1,20 @@
 import os
-from array import array
-from typing import Tuple, Any, Iterable
 
 import numpy as np
 import torch
 import torch.nn as nn
 from numpy import ndarray
-from torch import tensor
 from tqdm import tqdm
 
 from models.common import move_to_cuda, get_auc, load_model, Statistics, Config, current_time, \
-    convert_mp3_to_npy, get_random_data_chunk, get_data_chunked
-from models.loader import get_audio_loader
+    convert_mp3_to_npy, get_data_chunked
 
 
 class Tester:
     def __init__(self, config: Config = None, mode: str = "TEST"):
         if config is None:
             config = Config()
-
-        # data loader
-        self.data_loader = get_audio_loader(data_path=config.data_path,
-                                            batch_size=config.batch_size,
-                                            files_path=config.valid_path if mode == "VALID" else config.test_path,
-                                            binary_path=config.binary_path,
-                                            num_workers=config.num_workers,
-                                            input_length=config.input_length,
-                                            shuffle=False)
+        self.sr = config.sr
 
         # model path and step size
         self.model_save_path = config.model_save_path
@@ -42,9 +30,11 @@ class Tester:
 
         self.tags = np.load("split/mtat/tags.npy", allow_pickle=True)
         self.binary = np.load(config.binary_path, allow_pickle=True)
-        self.test_list = np.load(config.test_path, allow_pickle=True)
+        if mode == "VALID":
+            self.test_list = np.load(config.valid_path, allow_pickle=True)
+        else:
+            self.test_list = np.load(config.test_path, allow_pickle=True)
         self.data_path = config.data_path
-        self.batch_size = config.batch_size
         self.input_length = config.input_length
 
     def test(self, model=None):
@@ -62,7 +52,7 @@ class Tester:
             npy_data = np.load(npy_path, mmap_mode='c')
 
             ground_truth = self.binary[int(ix)]
-            y = torch.tensor([ground_truth.astype('float32') for _ in range(self.batch_size)])
+            y = torch.tensor([ground_truth.astype('float32') for _ in range(len(npy_data) // self.input_length)])
             out = self.predict_npy(npy_data, model)
             loss = self.loss_function(out, y)
 
@@ -91,7 +81,7 @@ class Tester:
         if model is None:
             model = load_model(self.model_save_path, self.model)
 
-        return self.predict_npy(convert_mp3_to_npy(x, 16000), model)
+        return self.predict_npy(convert_mp3_to_npy(x, self.sr), model)
 
     def predict_npy(self, x, model=None):
         if model is None:

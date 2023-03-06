@@ -3,12 +3,10 @@ from tempfile import NamedTemporaryFile
 import librosa
 import librosa.display
 import librosa.feature
-import numpy as np
 import streamlit as st
-import torch
 from matplotlib import pyplot as plt
 
-from models.common import Config, create_tagogram, plot_probability_graph
+from models.common import create_tagogram, plot_probability_graph
 from models.tester import Tester
 
 DATA_MODELS = {
@@ -25,7 +23,7 @@ def update_music_track(upload):
 
         st.write('#### Mel-frequency spectrogram')
         y, sr = librosa.load(temp.name)
-        fig, ax = plt.subplots(nrows=2, sharex=True)
+        fig, ax = plt.subplots(nrows=2, sharex='all')
         librosa.display.waveshow(y, sr=sr, ax=ax[0])
 
         spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=13)

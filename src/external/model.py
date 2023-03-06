@@ -81,8 +81,7 @@ class Musicnn(nn.Module):
                  f_min=0.0,
                  f_max=8000.0,
                  n_mels=96,
-                 n_class=50,
-                 dataset='mtat'):
+                 n_class=50):
         super(Musicnn, self).__init__()
 
         # Spectrogram
@@ -103,13 +102,13 @@ class Musicnn(nn.Module):
         self.layers = nn.ModuleList([m1, m2, m3, m4, m5])
 
         # Pons back-end
-        backend_channel = 512 if dataset == 'msd' else 64
+        backend_channel = 64
         self.layer1 = Conv_1d(561, backend_channel, 7, 1, 1)
         self.layer2 = Conv_1d(backend_channel, backend_channel, 7, 1, 1)
         self.layer3 = Conv_1d(backend_channel, backend_channel, 7, 1, 1)
 
         # Dense
-        dense_channel = 500 if dataset == 'msd' else 200
+        dense_channel = 200
         self.dense1 = nn.Linear((561 + (backend_channel * 3)) * 2, dense_channel)
         self.bn = nn.BatchNorm1d(dense_channel)
         self.relu = nn.ReLU()
