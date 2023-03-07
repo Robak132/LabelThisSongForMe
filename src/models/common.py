@@ -28,7 +28,7 @@ class Config:
     n_epochs: int = 5
     batch_size: int = 16
     lr: float = 1e-4
-    model_save_path: str = "models/musicnn.pth"
+    model_save_path: str = "models/musicnn"
     data_path: str = 'data'
     log_step: int = 100
     sr: int = 16000
@@ -75,7 +75,7 @@ def load_model(filename, model):
 
 
 def convert_mp3_to_npy(mp3_file, sr) -> ndarray:
-    x, sr = librosa.load(mp3_file, sr=sr)
+    x, _ = librosa.load(mp3_file, sr=sr)
     return x
 
 

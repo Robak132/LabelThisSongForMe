@@ -1,17 +1,16 @@
 from models.common import Config
-from models.preprocessor import PreProcessor
+from models.preprocessor import PreProcessor, OpenL3PreProcessor
 from external.model import Musicnn
 from models.tester import Tester
 from models.trainer import Trainer
 
 if __name__ == '__main__':
-
     config = Config(num_workers=0,
                     model=Musicnn(),
                     n_epochs=5,
                     batch_size=16,
                     lr=1e-4,
-                    model_save_path="models/musicnn.pth",
+                    model_save_path="models/musicnn",
                     data_path='data',
                     log_step=100,
                     sr=16000,

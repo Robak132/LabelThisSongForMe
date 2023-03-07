@@ -1,11 +1,10 @@
-import datetime
 import os
 import time
 
 import torch
 import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
-
+from datetime import datetime, timedelta
 from models.common import move_to_cuda, current_time, Config
 from models.loader import get_audio_loader
 from models.tester import Tester, Statistics
@@ -17,7 +16,7 @@ class Trainer:
             config = Config()
 
         # create folders if they don't exist
-        os.makedirs(os.path.join(*config.model_save_path.split("/")[:-1]), exist_ok=True)
+        os.makedirs(os.path.join(*config.model_save_path.split("/")), exist_ok=True)
 
         # data loader
         self.data_loader = get_audio_loader(data_path=config.data_path,
@@ -31,6 +30,7 @@ class Trainer:
 
         # model path and step size
         self.model_save_path = config.model_save_path
+        self.model_file_name = f"{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.pth"
         self.log_step = config.log_step
 
         # cuda
@@ -81,14 +81,14 @@ class Trainer:
             # Validation
             best_metric = self.validation(best_metric, epoch)
 
-        print(f"{current_time()}] Train finished. Elapsed: {datetime.timedelta(seconds=time.time() - start_t)}")
+        print(f"{current_time()}] Train finished. Elapsed: {timedelta(seconds=time.time() - start_t)}")
 
     def print_training_log(self, epoch, ctr, loss, start_t):
         print(f"[{current_time()}] "
               f"Epoch [{epoch + 1}/{self.n_epochs}] "
               f"Iter [{ctr}/{len(self.data_loader)}] "
               f"Loss/train: {loss.item():.4f} "
-              f"Elapsed: {datetime.timedelta(seconds=time.time() - start_t)}")
+              f"Elapsed: {timedelta(seconds=time.time() - start_t)}")
 
     def add_to_writer(self, stats: Statistics, epoch: int):
         self.writer.add_scalar('Loss/valid', stats.mean_loss, epoch)
@@ -103,5 +103,5 @@ class Trainer:
         if score > best_metric:
             print(f'[{current_time()}] Found new best model')
             best_metric = score
-            torch.save(self.model.state_dict(), os.path.join(self.model_save_path))
+            torch.save(self.model.state_dict(), os.path.join(self.model_save_path, self.model_file_name))
         return best_metric
