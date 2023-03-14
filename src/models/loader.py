@@ -2,7 +2,7 @@ import os
 import numpy as np
 from torch.utils import data
 
-from models.common import get_random_data_chunk
+from src.models.common import get_random_data_chunk
 
 
 class AudioFolder(data.Dataset):
@@ -22,7 +22,7 @@ class AudioFolder(data.Dataset):
         return len(self.files)
 
 
-def get_audio_loader(data_path, batch_size, files_path, binary_path, input_length, num_workers=0, shuffle=True):
+def get_audio_loader(data_path, batch_size, files_path, binary_path, input_length, shuffle=True):
     dataset = AudioFolder(data_path=data_path,
                           files_path=files_path,
                           binary_path=binary_path,
@@ -30,6 +30,5 @@ def get_audio_loader(data_path, batch_size, files_path, binary_path, input_lengt
     data_loader = data.DataLoader(dataset=dataset,
                                   batch_size=batch_size,
                                   shuffle=shuffle,
-                                  drop_last=False,
-                                  num_workers=num_workers)
+                                  drop_last=False)
     return data_loader

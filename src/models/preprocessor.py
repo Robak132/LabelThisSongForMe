@@ -1,49 +1,62 @@
 import os
+import pathlib
 
+import librosa
 import numpy as np
 import torchopenl3
 import tqdm
-from models.common import convert_mp3_to_npy
 
 
-class PreProcessor:
-    def __init__(self, config):
-        self.sr = config.sr
-        self.data_path = config.data_path
-        self.result_path = os.path.join(self.data_path, 'mtat/npy')
-        self.files = self.get_file_paths([config.train_path, config.valid_path, config.test_path])
+def convert_mp3_to_npy(mp3_file, sr) -> np.ndarray:
+    x, _ = librosa.load(mp3_file, sr=sr)
+    return x
 
-    def get_file_paths(self, file_lists):
-        files = []
-        for file in file_lists:
-            for filename in np.load(file, allow_pickle=True)[:, 1]:
-                files.append(os.path.join(self.data_path, 'mtat/mp3', filename))
-        return files
 
-    def run(self):
-        for fn in tqdm.tqdm(self.files):
-            result_fn = os.path.join(self.result_path, fn.split('/')[-2], fn.split('/')[-1][:-3]+'npy')
-            if not os.path.exists(result_fn):
+class BasePreProcessor:
+    def __init__(self, input_path, output_path, suffix=None):
+        self.input_path = input_path
+        self.output_path = output_path
+        self.suffix = suffix
+
+    def run(self, files):
+        for filename in tqdm.tqdm(files):
+            input_full_filename = os.path.join(self.input_path, filename)
+
+            if self.suffix is not None:
+                filename = pathlib.Path(filename).with_suffix(f".{self.suffix}")
+            output_full_filename = os.path.join(self.output_path, filename)
+            if not os.path.exists(output_full_filename):
                 try:
-                    os.makedirs(os.path.join(*result_fn.split("/")[:-1]), exist_ok=True)
-                    x = self.process(fn)
-                    np.save(open(result_fn, 'wb'), x)
+                    os.makedirs(os.path.join(*output_full_filename.split("/")[:-1]), exist_ok=True)
+                    self.process(input_full_filename, output_full_filename)
                 except RuntimeError and EOFError:
                     # some audio files are broken
-                    print(fn)
+                    print(filename)
                     continue
 
-    def process(self, fn):
-        return convert_mp3_to_npy(fn, self.sr)
+    def process(self, input_filename, output_filename):
+        raise Exception("You cannot use abstract class")
 
 
-class OpenL3PreProcessor(PreProcessor):
-    def __init__(self, config):
-        super().__init__(config)
-        self.result_path = os.path.join(self.data_path, 'mtat/emb')
+class PreProcessor(BasePreProcessor):
+    def __init__(self, input_path, output_path, sr=16000, suffix=None):
+        super().__init__(input_path, output_path, suffix)
+        self.sr = sr
 
-    def process(self, fn):
-        x = convert_mp3_to_npy(fn, self.sr)
-        emb, ts = torchopenl3.get_audio_embedding(x, self.sr, content_type="music", input_repr="linear",
-                                                  embedding_size=512, batch_size=10, sampler="julian")
-        return emb.detach().cpu().numpy()
+    def process(self, input_filename, output_filename):
+        x = convert_mp3_to_npy(input_filename, self.sr)
+        np.save(open(output_filename, 'wb'), x)
+
+
+class OpenL3PreProcessor(BasePreProcessor):
+    def __init__(self, input_path, output_path, sr=16000, suffix=None):
+        super().__init__(input_path, output_path, suffix)
+        self.sr = sr
+
+    def process(self, input_filename, output_filename):
+        x = convert_mp3_to_npy(input_filename, self.sr)
+        emb, ts = torchopenl3.get_audio_embedding(x, self.sr, content_type="music", input_repr="mel256",
+                                                  embedding_size=512, hop_size=1, batch_size=10, sampler="julian",
+                                                  verbose=0)
+        x = emb.detach().cpu().numpy()
+        np.save(open(output_filename, 'wb'), x)

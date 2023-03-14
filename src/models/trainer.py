@@ -5,15 +5,20 @@ import torch
 import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime, timedelta
-from models.common import move_to_cuda, current_time, Config
-from models.loader import get_audio_loader
-from models.tester import Tester, Statistics
+from src.models.common import move_to_cuda, current_time, Config, load_file_lists
+from src.models.loader import get_audio_loader
+from src.models.tester import Tester, Statistics
 
 
 class Trainer:
     def __init__(self, config: Config = None):
         if config is None:
             config = Config()
+
+        # run preprocessor if needed
+        if config.preprocessor is not None:
+            files = load_file_lists([config.train_path, config.valid_path, config.test_path])[:, 1]
+            config.preprocessor.run(files)
 
         # create folders if they don't exist
         os.makedirs(os.path.join(*config.model_save_path.split("/")), exist_ok=True)
@@ -23,7 +28,6 @@ class Trainer:
                                             batch_size=config.batch_size,
                                             files_path=config.train_path,
                                             binary_path=config.binary_path,
-                                            num_workers=config.num_workers,
                                             input_length=config.input_length)
         # training settings
         self.n_epochs = config.n_epochs
@@ -46,7 +50,7 @@ class Trainer:
         self.writer = SummaryWriter()
 
         # Validator
-        self.validator = Tester(config, "VALID")
+        self.validator = Tester(config, mode="VALID")
 
     def train(self):
         # Start training

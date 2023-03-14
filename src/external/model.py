@@ -4,8 +4,8 @@ import torch
 import torch.nn as nn
 import torchaudio
 
-from external.attention_modules import BertConfig, BertEncoder, BertPooler
-from external.modules import Conv_1d, ResSE_1d, Conv_2d, Res_2d, Conv_V, Conv_H, HarmonicSTFT, Res_2d_mp
+from src.external.attention_modules import BertConfig, BertEncoder, BertPooler
+from src.external.modules import Conv_1d, ResSE_1d, Conv_2d, Res_2d, Conv_V, Conv_H, HarmonicSTFT, Res_2d_mp
 
 
 class FCN(nn.Module):

@@ -6,12 +6,12 @@ import torch.nn as nn
 from numpy import ndarray
 from tqdm import tqdm
 
-from models.common import move_to_cuda, get_auc, load_model, Statistics, Config, current_time, \
+from src.models.common import move_to_cuda, get_auc, load_model, Statistics, Config, current_time, \
     convert_mp3_to_npy, get_data_chunked
 
 
 class Tester:
-    def __init__(self, config: Config = None, mode: str = "TEST"):
+    def __init__(self, config: Config = None, cuda: bool = None, mode: str = "TEST"):
         if config is None:
             config = Config()
         self.sr = config.sr
@@ -21,14 +21,14 @@ class Tester:
         self.log_step = config.log_step
 
         # cuda
-        self.is_cuda = torch.cuda.is_available()
+        self.is_cuda = torch.cuda.is_available() if cuda is None else cuda
         print(f"[{current_time()}] Tester initialised with CUDA: {self.is_cuda} and mode: {mode}")
 
         # model
         self.model = move_to_cuda(config.model)
         self.loss_function = nn.BCELoss()
 
-        self.tags = np.load("split/mtat/tags.npy", allow_pickle=True)
+        self.tags = np.load(config.tags_path, allow_pickle=True)
         self.binary = np.load(config.binary_path, allow_pickle=True)
         if mode == "VALID":
             self.test_list = np.load(config.valid_path, allow_pickle=True)

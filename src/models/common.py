@@ -6,11 +6,12 @@ import numpy as np
 import torch
 from matplotlib import pyplot as plt
 from numpy import ndarray
+from plotly.graph_objs import Bar, Figure
 from sklearn import metrics
 from torch import tensor, Tensor
 from torch.nn import Module
 
-from external.model import Musicnn
+from src.external.model import Musicnn
 
 
 @dataclass
@@ -23,7 +24,7 @@ class Statistics:
 
 @dataclass
 class Config:
-    num_workers: int = 0
+    preprocessor: object = None
     model: Module = Musicnn()
     n_epochs: int = 5
     batch_size: int = 16
@@ -33,6 +34,7 @@ class Config:
     log_step: int = 100
     sr: int = 16000
     input_length: int = 3 * sr
+    tags_path: str = "split/mtat/tags.npy"
     train_path: str = "split/mtat/train.npy"
     valid_path: str = "split/mtat/valid.npy"
     test_path: str = "split/mtat/test.npy"
@@ -88,9 +90,18 @@ def create_tagogram(raw_data, tags):
     return fig
 
 
-def plot_probability_graph(tags):
-    fig, ax = plt.subplots()
-    y_pos = np.arange(len(tags))[::-1]
-    ax.barh(y_pos, tags.T[1].astype('float64'), align='center')
-    ax.set_yticks(y_pos, labels=tags.T[0])
+def plot_probability_graph(prediction):
+    fig = Figure(Bar(
+        x=prediction[:, 1],
+        y=prediction[:, 0],
+        orientation='h'))
+    fig.update_layout(yaxis=dict(autorange="reversed"))
     return fig
+
+
+def load_file_lists(file_lists: list[str]) -> ndarray:
+    files = []
+    for file_list in file_lists:
+        for obj_file in np.load(file_list, allow_pickle=True):
+            files.append(obj_file)
+    return np.array(files)

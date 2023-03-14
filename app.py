@@ -6,12 +6,12 @@ import librosa.feature
 import streamlit as st
 from matplotlib import pyplot as plt
 
-from models.common import create_tagogram, plot_probability_graph
-from models.tester import Tester
+from src.models.common import create_tagogram, plot_probability_graph, Config
+from src.models.tester import Tester
 
 DATA_MODELS = {
-    "MusiCNN": "../models/musicnn.pth",
-    "EdgeL3": "../models/musicnn.pth"
+    "MusiCNN": "models/musicnn.pth",
+    "EdgeL3": "models/musicnn.pth"
 }
 
 
@@ -32,9 +32,9 @@ def update_music_track(upload):
         st.pyplot(fig)
 
         st.write('#### Tags')
-        tester = Tester()
+        tester = Tester(Config(model_save_path="models/musicnn.pth"))
         raw_data, raw_tags, prediction = tester.predict_tags(mp3_file=temp.name)
-        st.pyplot(plot_probability_graph(prediction))
+        st.plotly_chart(plot_probability_graph(prediction), use_container_width=True)
         st.pyplot(create_tagogram(raw_data, tester.tags))
 
 
