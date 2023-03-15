@@ -1,9 +1,9 @@
 import os
 
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
-from numpy import ndarray
 from tqdm import tqdm
 
 from src.models.common import move_to_cuda, get_auc, load_model, Statistics, Config, current_time, \
@@ -67,15 +67,14 @@ class Tester:
         print(f"[{current_time()}] AUC/PR: {pr_auc:.4f}")
         return results, Statistics(roc_auc, pr_auc, mean_loss)
 
-    def predict_tags(self, mp3_file=None, model=None) -> tuple[ndarray, ndarray, ndarray]:
+    def predict_tags(self, mp3_file=None, model=None) -> pd.DataFrame:
         if model is None:
             model = load_model(self.model_save_path, self.model)
         if mp3_file is not None:
-            out = self.predict_mp3(mp3_file, model)
-            mean_out = torch.mean(out, dim=0)
-            tags = [[self.tags[i], mean_out[i].item()] for i in range(len(mean_out))]
-            tags.sort(key=lambda x: x[1], reverse=True)
-            return out, self.tags, np.array(tags)
+            out = self.predict_mp3(mp3_file, model).T
+            df = pd.DataFrame(out, index=self.tags)
+            df = df.reindex(df.mean(axis=1).sort_values(ascending=False).index)
+            return df
 
     def predict_mp3(self, x, model=None):
         if model is None:

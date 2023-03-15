@@ -31,11 +31,10 @@ def update_music_track(upload):
         fig.colorbar(img, ax=ax, format="%+2.f dB")
         st.pyplot(fig)
 
-        st.write('#### Tags')
         tester = Tester(Config(model_save_path="models/musicnn.pth"))
-        raw_data, raw_tags, prediction = tester.predict_tags(mp3_file=temp.name)
+        prediction = tester.predict_tags(mp3_file=temp.name)
         st.plotly_chart(plot_probability_graph(prediction), use_container_width=True)
-        st.pyplot(create_tagogram(raw_data, tester.tags))
+        st.plotly_chart(create_tagogram(prediction))
 
 
 def setup_sidebar():

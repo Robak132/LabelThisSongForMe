@@ -3,10 +3,12 @@ from datetime import datetime
 
 import librosa
 import numpy as np
+import pandas as pd
+import plotly.express as px
 import torch
 from matplotlib import pyplot as plt
 from numpy import ndarray
-from plotly.graph_objs import Bar, Figure
+from plotly.graph_objs import Bar, Figure, Layout
 from sklearn import metrics
 from torch import tensor, Tensor
 from torch.nn import Module
@@ -81,20 +83,17 @@ def convert_mp3_to_npy(mp3_file, sr) -> ndarray:
     return x
 
 
-def create_tagogram(raw_data, tags):
-    fig, ax = plt.subplots()
-    img = ax.imshow(raw_data.T, aspect='auto')
-    ax.set_yticks(np.arange(len(tags)), labels=tags)
-    ax.xaxis.set_visible(False)
-    plt.colorbar(img, ax=ax)
+def create_tagogram(prediction: pd.DataFrame):
+    fig = px.imshow(img=prediction.values,
+                    y=prediction.index,
+                    color_continuous_scale='RdBu_r',
+                    title="Tag probability in each chunk")
     return fig
 
 
-def plot_probability_graph(prediction):
-    fig = Figure(Bar(
-        x=prediction[:, 1],
-        y=prediction[:, 0],
-        orientation='h'))
+def plot_probability_graph(prediction: pd.DataFrame):
+    fig = Figure(data=Bar(x=prediction.mean(axis=1), y=prediction.index, orientation='h'),
+                 layout=Layout(title="Mean tag probability"))
     fig.update_layout(yaxis=dict(autorange="reversed"))
     return fig
 

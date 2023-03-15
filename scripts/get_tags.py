@@ -10,8 +10,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     tester = Tester(config=Config(model_save_path=args.model), cuda=False)
-    raw_data, raw_tags, prediction = tester.predict_tags(mp3_file=args.filename)
+    prediction = tester.predict_tags(mp3_file=args.filename)
     print(f"File: {args.filename}")
     print(f"Tags: {prediction}")
-    plot_probability_graph(prediction).show()
-    create_tagogram(raw_data, tester.tags)
+    fig1 = plot_probability_graph(prediction)
+    fig1.show()
+    fig1.write_image("fig1.png")
+
+    fig2 = create_tagogram(prediction)
+    fig2.show()
+    fig2.write_image("fig2.png")
