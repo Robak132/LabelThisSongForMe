@@ -29,7 +29,7 @@ class Tester:
         self.loss_function = nn.BCELoss()
 
         self.tags = np.load(config.tags_path, allow_pickle=True)
-        self.binary = np.load(config.binary_path, allow_pickle=True)
+        self.binary = {row[0]: row[1:] for row in np.load(config.binary_path, allow_pickle=True)}
         if mode == "VALID":
             self.test_list = np.load(config.valid_path, allow_pickle=True)
         else:

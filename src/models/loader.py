@@ -10,7 +10,7 @@ class AudioFolder(data.Dataset):
         self.data_path = data_path
         self.input_length = input_length
         self.files = np.load(files_path, allow_pickle=True)
-        self.binary = np.load(binary_path, allow_pickle=True)
+        self.binary = {row[0]: row[1:] for row in np.load(binary_path, allow_pickle=True)}
 
     def __getitem__(self, index):
         ix, fn = self.files[index]
