@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import torch
-from matplotlib import pyplot as plt
 from numpy import ndarray
 from plotly.graph_objs import Bar, Figure, Layout
 from sklearn import metrics
@@ -31,7 +30,7 @@ class Config:
     n_epochs: int = 5
     batch_size: int = 16
     lr: float = 1e-4
-    model_save_path: str = "models/musicnn"
+    model_save_path: str = "models"
     data_path: str = 'data'
     log_step: int = 100
     sr: int = 16000

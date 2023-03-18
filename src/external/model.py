@@ -148,6 +148,10 @@ class Musicnn(nn.Module):
 
         return out
 
+    @staticmethod
+    def get_name():
+        return "musicnn"
+
 
 class CRNN(nn.Module):
     """
@@ -454,11 +458,11 @@ class ShortChunkCNN_Res(nn.Module):
 
 
 class CNNSA(nn.Module):
-    '''
+    """
     Won et al. 2019
     Toward interpretable music tagging with self-attention.
     Feature extraction with CNN + temporal summary with Transformer encoder.
-    '''
+    """
 
     def __init__(self,
                  n_channels=128,
@@ -554,11 +558,11 @@ class CNNSA(nn.Module):
 
 
 class HarmonicCNN(nn.Module):
-    '''
+    """
     Won et al. 2020
     Data-driven harmonic filters for audio representation learning.
     Trainable harmonic band-pass filters, short-chunk CNN.
-    '''
+    """
 
     def __init__(self,
                  n_channels=128,

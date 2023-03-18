@@ -20,9 +20,6 @@ class Trainer:
             files = load_file_lists([config.train_path, config.valid_path, config.test_path])[:, 1]
             config.preprocessor.run(files)
 
-        # create folders if they don't exist
-        os.makedirs(os.path.join(*config.model_save_path.split("/")), exist_ok=True)
-
         # data loader
         self.data_loader = get_audio_loader(data_path=config.data_path,
                                             batch_size=config.batch_size,
@@ -31,11 +28,12 @@ class Trainer:
                                             input_length=config.input_length)
         # training settings
         self.n_epochs = config.n_epochs
+        self.log_step = config.log_step
 
         # model path and step size
-        self.model_save_path = config.model_save_path
+        self.model_save_path = os.path.join(config.model_save_path, config.model.get_name())
+        os.makedirs(os.path.join(*self.model_save_path.split("/")), exist_ok=True)
         self.model_file_name = f"{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.pth"
-        self.log_step = config.log_step
 
         # cuda
         self.is_cuda = torch.cuda.is_available()

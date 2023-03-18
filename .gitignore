@@ -138,7 +138,7 @@ dask-worker-space
 /.idea
 
 # Logs
-/runs
+**/runs
 
 # Data
 /data/**

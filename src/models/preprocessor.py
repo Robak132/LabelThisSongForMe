@@ -45,7 +45,7 @@ class PreProcessor(BasePreProcessor):
 
     def process(self, input_filename, output_filename):
         x = convert_mp3_to_npy(input_filename, self.sr)
-        np.save(open(output_filename, 'wb'), x)
+        np.save(output_filename, x)
 
 
 class OpenL3PreProcessor(BasePreProcessor):
@@ -59,4 +59,4 @@ class OpenL3PreProcessor(BasePreProcessor):
                                                   embedding_size=512, hop_size=1, batch_size=10, sampler="julian",
                                                   verbose=0)
         x = emb.detach().cpu().numpy()
-        np.save(open(output_filename, 'wb'), x)
+        np.save(output_filename, x)

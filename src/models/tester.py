@@ -11,13 +11,14 @@ from src.models.common import move_to_cuda, get_auc, load_model, Statistics, Con
 
 
 class Tester:
-    def __init__(self, config: Config = None, cuda: bool = None, mode: str = "TEST"):
+    def __init__(self, config: Config = None, model_file_name: str = None, cuda: bool = None, mode: str = "TEST"):
         if config is None:
             config = Config()
         self.sr = config.sr
 
         # model path and step size
-        self.model_save_path = config.model_save_path
+        self.model_save_path = os.path.join(config.model_save_path, config.model.get_name())
+        self.model_file_name = model_file_name
         self.log_step = config.log_step
 
         # cuda
@@ -39,7 +40,7 @@ class Tester:
 
     def test(self, model=None):
         if model is None:
-            model = load_model(self.model_save_path, self.model)
+            model = load_model(os.path.join(self.model_save_path, self.model_file_name), self.model)
 
         est_array = []
         gt_array = []
@@ -52,7 +53,8 @@ class Tester:
             npy_data = np.load(npy_path, mmap_mode='c')
 
             ground_truth = self.binary[int(ix)]
-            y = torch.tensor([ground_truth.astype('float32') for _ in range(len(npy_data) // self.input_length)])
+            y = np.tile(ground_truth, (len(npy_data) // self.input_length, 1))
+            y = torch.tensor(y.astype("float32"))
             out = self.predict_npy(npy_data, model)
             loss = self.loss_function(out, y)
 

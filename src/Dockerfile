@@ -1,4 +1,5 @@
-FROM tiangolo/uvicorn-gunicorn-fastapi:latest
+
+ROM tiangolo/uvicorn-gunicorn-fastapi:latest
 
 # RUN pip install --upgrade pandas pyarrow loguru sklearn
 
