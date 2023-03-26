@@ -6,49 +6,58 @@ import librosa.feature
 import streamlit as st
 from matplotlib import pyplot as plt
 
+from src.external.model import Musicnn
 from src.models.common import create_tagogram, plot_probability_graph, Config
 from src.models.tester import Tester
 
-DATA_MODELS = {
-    "MusiCNN": "models/musicnn.pth",
-    "EdgeL3": "models/musicnn.pth"
-}
+if 'selected_model_index' not in st.session_state:
+    st.session_state.selected_model_index = 0
+
+if 'data_models' not in st.session_state:
+    st.session_state.data_models = {
+        "MusicNN": Tester(Config(model=Musicnn(n_class=10),
+                          dataset_split_path="split",
+                          dataset_name="mtat-10"),
+                          model_file_name="2023-03-18-14-11-41.pth"),
+        "EdgeL3": Tester(Config(model=Musicnn(n_class=10),
+                         dataset_split_path="split",
+                         dataset_name="mtat-10"),
+                         model_file_name="2023-03-18-14-11-41.pth")}
 
 
 def update_music_track(upload):
-    st.sidebar.audio(upload.read(), format='audio/mp3')
     with NamedTemporaryFile(suffix="mp3") as temp:
         temp.write(upload.getvalue())
         temp.seek(0)
 
-        st.write('#### Mel-frequency spectrogram')
         y, sr = librosa.load(temp.name)
         fig, ax = plt.subplots(nrows=2, sharex='all')
-        librosa.display.waveshow(y, sr=sr, ax=ax[0])
-
         spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=13)
         img = librosa.display.specshow(librosa.power_to_db(spectrogram), x_axis='time', y_axis='mel', ax=ax[1])
         fig.colorbar(img, ax=ax, format="%+2.f dB")
-        st.pyplot(fig)
 
-        tester = Tester(Config(model_save_path="models/musicnn.pth"))
-        prediction = tester.predict_tags(mp3_file=temp.name)
-        st.plotly_chart(plot_probability_graph(prediction), use_container_width=True)
-        st.plotly_chart(create_tagogram(prediction))
-
-
-def setup_sidebar():
-    st.sidebar.write("## :gear: Settings")
-    st.sidebar.write("#### Upload/Download")
-    uploaded_file = st.sidebar.file_uploader("Please upload mp3 file.", type=['mp3'])
-    if uploaded_file is not None:
-        update_music_track(uploaded_file)
-    st.sidebar.write("#### Model")
-    return DATA_MODELS[st.sidebar.selectbox('Select model', DATA_MODELS.keys())]
+        prediction = st.session_state.current_model.predict_tags(mp3_file=temp.name)
+    st.write("## Visualisation of music tagging models")
+    st.write('#### Mel-frequency spectrogram')
+    librosa.display.waveshow(y, sr=sr, ax=ax[0])
+    st.pyplot(fig)
+    st.plotly_chart(plot_probability_graph(prediction), use_container_width=True)
+    st.plotly_chart(create_tagogram(prediction))
 
 
 if __name__ == '__main__':
     st.set_page_config(layout="centered", page_title="Music Tagging", initial_sidebar_state="expanded")
-    st.write("## Visualisation of music tagging models")
+    st.sidebar.write("## :gear: Settings")
+    st.sidebar.write("#### Upload/Download")
+    st.sidebar.file_uploader("Please upload mp3 file.", type=['mp3'], key='uploaded_file')
+    if st.session_state.uploaded_file is not None:
+        st.sidebar.audio(st.session_state.uploaded_file.read(), format='audio/mp3')
 
-    model = setup_sidebar()
+    st.sidebar.write("#### Model")
+    st.sidebar.selectbox(label='Select model:', options=st.session_state.data_models.keys(),
+        index=st.session_state.selected_model_index, key='selected_model_name')
+
+    st.session_state.current_model = st.session_state.data_models[st.session_state.selected_model_name]
+
+    if st.session_state.uploaded_file is not None:
+        update_music_track(st.session_state.uploaded_file)

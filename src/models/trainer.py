@@ -15,16 +15,21 @@ class Trainer:
         if config is None:
             config = Config()
 
+        train_path = os.path.join(config.dataset_split_path, config.dataset_name, "train.npy")
+        valid_path = os.path.join(config.dataset_split_path, config.dataset_name, "valid.npy")
+        test_path = os.path.join(config.dataset_split_path, config.dataset_name, "test.npy")
+        binary_path = os.path.join(config.dataset_split_path, config.dataset_name, "binary.npy")
+
         # run preprocessor if needed
         if config.preprocessor is not None:
-            files = load_file_lists([config.train_path, config.valid_path, config.test_path])[:, 1]
+            files = load_file_lists([train_path, valid_path, test_path])[:, 1]
             config.preprocessor.run(files)
 
         # data loader
         self.data_loader = get_audio_loader(data_path=config.data_path,
                                             batch_size=config.batch_size,
-                                            files_path=config.train_path,
-                                            binary_path=config.binary_path,
+                                            files_path=train_path,
+                                            binary_path=binary_path,
                                             input_length=config.input_length)
         # training settings
         self.n_epochs = config.n_epochs
@@ -33,7 +38,6 @@ class Trainer:
         # model path and step size
         self.model_save_path = os.path.join(config.model_save_path, config.model.get_name())
         os.makedirs(os.path.join(*self.model_save_path.split("/")), exist_ok=True)
-        self.model_file_name = f"{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.pth"
 
         # cuda
         self.is_cuda = torch.cuda.is_available()
@@ -45,7 +49,9 @@ class Trainer:
         self.optimizer = torch.optim.Adam(self.model.parameters(), config.lr, weight_decay=1e-4)
 
         # Tensorboard
-        self.writer = SummaryWriter()
+        start_datetime = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+        self.model_file_name = f"{start_datetime}.pth"
+        self.writer = SummaryWriter(os.path.join("runs", config.dataset_name, start_datetime))
 
         # Validator
         self.validator = Tester(config, mode="VALID")

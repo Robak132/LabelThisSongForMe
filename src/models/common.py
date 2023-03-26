@@ -35,11 +35,8 @@ class Config:
     log_step: int = 100
     sr: int = 16000
     input_length: int = 3 * sr
-    tags_path: str = "split/mtat/tags.npy"
-    train_path: str = "split/mtat/train.npy"
-    valid_path: str = "split/mtat/valid.npy"
-    test_path: str = "split/mtat/test.npy"
-    binary_path: str = "split/mtat/binary.npy"
+    dataset_split_path: str = "split"
+    dataset_name: str = "mtat"
 
 
 def get_auc(est_array, gt_array):

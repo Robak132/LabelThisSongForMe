@@ -16,6 +16,11 @@ class Tester:
             config = Config()
         self.sr = config.sr
 
+        tags_path = os.path.join(config.dataset_split_path, config.dataset_name, "tags.npy")
+        valid_path = os.path.join(config.dataset_split_path, config.dataset_name, "valid.npy")
+        test_path = os.path.join(config.dataset_split_path, config.dataset_name, "test.npy")
+        binary_path = os.path.join(config.dataset_split_path, config.dataset_name, "binary.npy")
+
         # model path and step size
         self.model_save_path = os.path.join(config.model_save_path, config.model.get_name())
         self.model_file_name = model_file_name
@@ -29,12 +34,12 @@ class Tester:
         self.model = move_to_cuda(config.model)
         self.loss_function = nn.BCELoss()
 
-        self.tags = np.load(config.tags_path, allow_pickle=True)
-        self.binary = {row[0]: row[1:] for row in np.load(config.binary_path, allow_pickle=True)}
+        self.tags = np.load(tags_path, allow_pickle=True)
+        self.binary = {row[0]: row[1:] for row in np.load(binary_path, allow_pickle=True)}
         if mode == "VALID":
-            self.test_list = np.load(config.valid_path, allow_pickle=True)
+            self.test_list = np.load(valid_path, allow_pickle=True)
         else:
-            self.test_list = np.load(config.test_path, allow_pickle=True)
+            self.test_list = np.load(test_path, allow_pickle=True)
         self.data_path = config.data_path
         self.input_length = config.input_length
 
@@ -48,8 +53,7 @@ class Tester:
         results = []
         model.eval()
         for ix, mp3_path in tqdm(self.test_list):
-            npy_path = os.path.join(self.data_path, 'mtat', 'npy', mp3_path.split('/')[0],
-                                    mp3_path.split('/')[1][:-3]) + 'npy'
+            npy_path = os.path.join(self.data_path, 'mtat/npy', mp3_path.split('/')[0], mp3_path.split('/')[1][:-3]) + 'npy'
             npy_data = np.load(npy_path, mmap_mode='c')
 
             ground_truth = self.binary[int(ix)]
@@ -71,7 +75,7 @@ class Tester:
 
     def predict_tags(self, mp3_file=None, model=None) -> pd.DataFrame:
         if model is None:
-            model = load_model(self.model_save_path, self.model)
+            model = load_model(os.path.join(self.model_save_path, self.model_file_name), self.model)
         if mp3_file is not None:
             out = self.predict_mp3(mp3_file, model).T
             df = pd.DataFrame(out, index=self.tags)
@@ -80,7 +84,7 @@ class Tester:
 
     def predict_mp3(self, x, model=None):
         if model is None:
-            model = load_model(self.model_save_path, self.model)
+            model = load_model(os.path.join(self.model_save_path, self.model_file_name), self.model)
 
         return self.predict_npy(convert_mp3_to_npy(x, self.sr), model)
 
