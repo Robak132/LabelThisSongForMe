@@ -36,8 +36,8 @@ class Trainer:
         self.log_step = config.log_step
 
         # model path and step size
-        self.model_save_path = os.path.join(config.model_save_path, config.model.get_name())
-        os.makedirs(os.path.join(*self.model_save_path.split("/")), exist_ok=True)
+        self.model_filename_path = os.path.join(config.model_filename_path, config.model.get_name())
+        os.makedirs(os.path.join(*self.model_filename_path.split("/")), exist_ok=True)
 
         # cuda
         self.is_cuda = torch.cuda.is_available()
@@ -104,12 +104,12 @@ class Trainer:
         self.writer.add_scalar('AUC/PR', stats.pr_auc, epoch)
 
     def validation(self, best_metric, epoch: int):
-        _, stats = self.validator.test(self.model)
+        stats = self.validator.test(self.model)
         self.add_to_writer(stats, epoch)
 
         score = 1 - stats.mean_loss
         if score > best_metric:
             print(f'[{current_time()}] Found new best model')
             best_metric = score
-            torch.save(self.model.state_dict(), os.path.join(self.model_save_path, self.model_file_name))
+            torch.save(self.model.state_dict(), os.path.join(self.model_filename_path, self.model_file_name))
         return best_metric

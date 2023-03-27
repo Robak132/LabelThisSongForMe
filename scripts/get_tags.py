@@ -9,7 +9,7 @@ if __name__ == '__main__':
     parser.add_argument('model', type=str, help='Path to model file (PTH)')
     args = parser.parse_args()
 
-    tester = Tester(config=Config(model_save_path=args.model), cuda=False)
+    tester = Tester(config=Config(model_filename_path=args.model), cuda=False)
     prediction = tester.predict_tags(mp3_file=args.filename)
     print(f"File: {args.filename}")
     print(f"Tags: {prediction}")

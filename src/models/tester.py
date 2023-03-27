@@ -1,30 +1,37 @@
 import os
 
 import numpy as np
-import pandas as pd
 import torch
 import torch.nn as nn
 from tqdm import tqdm
 
-from src.models.common import move_to_cuda, get_auc, load_model, Statistics, Config, current_time, \
-    convert_mp3_to_npy, get_data_chunked
+from models.predictor import Predictor
+from src.models.common import move_to_cuda, get_auc, load_model, Statistics, Config, current_time
+
+
+class BaseTester:
+    def __init__(self, config: Config = None, model_filename: str = None, cuda: bool = None):
+        if config is None:
+            config = Config()
+
+        self.model_filename_path = os.path.join(config.model_filename_path, config.model.get_name())
+        self.model_filename = model_filename
+
 
 
 class Tester:
-    def __init__(self, config: Config = None, model_file_name: str = None, cuda: bool = None, mode: str = "TEST"):
+    def __init__(self, config: Config = None, model_filename: str = None, cuda: bool = None, mode: str = "TEST"):
         if config is None:
             config = Config()
-        self.sr = config.sr
 
-        tags_path = os.path.join(config.dataset_split_path, config.dataset_name, "tags.npy")
         valid_path = os.path.join(config.dataset_split_path, config.dataset_name, "valid.npy")
         test_path = os.path.join(config.dataset_split_path, config.dataset_name, "test.npy")
         binary_path = os.path.join(config.dataset_split_path, config.dataset_name, "binary.npy")
 
-        # model path and step size
-        self.model_save_path = os.path.join(config.model_save_path, config.model.get_name())
-        self.model_file_name = model_file_name
-        self.log_step = config.log_step
+        self.predictor = Predictor(config, model_filename, cuda)
+
+        self.model_filename_path = os.path.join(config.model_filename_path, config.model.get_name())
+        self.model_filename = model_filename
 
         # cuda
         self.is_cuda = torch.cuda.is_available() if cuda is None else cuda
@@ -32,9 +39,9 @@ class Tester:
 
         # model
         self.model = move_to_cuda(config.model)
+        self.log_step = config.log_step
         self.loss_function = nn.BCELoss()
 
-        self.tags = np.load(tags_path, allow_pickle=True)
         self.binary = {row[0]: row[1:] for row in np.load(binary_path, allow_pickle=True)}
         if mode == "VALID":
             self.test_list = np.load(valid_path, allow_pickle=True)
@@ -43,14 +50,10 @@ class Tester:
         self.data_path = config.data_path
         self.input_length = config.input_length
 
-    def test(self, model=None):
-        if model is None:
-            model = load_model(os.path.join(self.model_save_path, self.model_file_name), self.model)
-
+    def test(self, model) -> Statistics:
         est_array = []
         gt_array = []
         losses = []
-        results = []
         model.eval()
         for ix, mp3_path in tqdm(self.test_list):
             npy_path = os.path.join(self.data_path, 'mtat/npy', mp3_path.split('/')[0], mp3_path.split('/')[1][:-3]) + 'npy'
@@ -59,11 +62,10 @@ class Tester:
             ground_truth = self.binary[int(ix)]
             y = np.tile(ground_truth, (len(npy_data) // self.input_length, 1))
             y = torch.tensor(y.astype("float32"))
-            out = self.predict_npy(npy_data, model)
+            out = self.predictor.predict_npy(npy_data, model)
             loss = self.loss_function(out, y)
 
             losses.append(float(loss))
-            results.append(out)
             est_array.append(np.array(out).mean(axis=0))
             gt_array.append(ground_truth)
         mean_loss = np.mean(losses)
@@ -71,28 +73,4 @@ class Tester:
         print(f"[{current_time()}] Loss/valid: {mean_loss:.4f}")
         print(f"[{current_time()}] AUC/ROC: {roc_auc:.4f}")
         print(f"[{current_time()}] AUC/PR: {pr_auc:.4f}")
-        return results, Statistics(roc_auc, pr_auc, mean_loss)
-
-    def predict_tags(self, mp3_file=None, model=None) -> pd.DataFrame:
-        if model is None:
-            model = load_model(os.path.join(self.model_save_path, self.model_file_name), self.model)
-        if mp3_file is not None:
-            out = self.predict_mp3(mp3_file, model).T
-            df = pd.DataFrame(out, index=self.tags)
-            df = df.reindex(df.mean(axis=1).sort_values(ascending=False).index)
-            return df
-
-    def predict_mp3(self, x, model=None):
-        if model is None:
-            model = load_model(os.path.join(self.model_save_path, self.model_file_name), self.model)
-
-        return self.predict_npy(convert_mp3_to_npy(x, self.sr), model)
-
-    def predict_npy(self, x, model=None):
-        if model is None:
-            model = load_model(self.model_save_path, self.model)
-
-        x = get_data_chunked(x, self.input_length)
-        x = move_to_cuda(x)
-        out = model(x).detach().cpu()
-        return out
+        return Statistics(roc_auc, pr_auc, mean_loss)

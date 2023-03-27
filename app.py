@@ -8,25 +8,23 @@ from matplotlib import pyplot as plt
 
 from src.external.model import Musicnn
 from src.models.common import create_tagogram, plot_probability_graph, Config
-from src.models.tester import Tester
+from src.models.predictor import Predictor
 
 if 'selected_model_index' not in st.session_state:
     st.session_state.selected_model_index = 0
 
 if 'data_models' not in st.session_state:
     st.session_state.data_models = {
-        "MusicNN": Tester(Config(model=Musicnn(n_class=10),
-                          dataset_split_path="split",
-                          dataset_name="mtat-10"),
-                          model_file_name="2023-03-18-14-11-41.pth"),
-        "EdgeL3": Tester(Config(model=Musicnn(n_class=10),
-                         dataset_split_path="split",
-                         dataset_name="mtat-10"),
-                         model_file_name="2023-03-18-14-11-41.pth")}
+        "MusicNN (10 classes)": Predictor(Config(model=Musicnn(n_class=10), dataset_split_path="split", dataset_name="mtat-10"),
+                                          model_filename="mtat-10/2023-03-26-13-22-52.pth"),
+        "MusicNN (20 classes)": Predictor(Config(model=Musicnn(n_class=20), dataset_split_path="split", dataset_name="mtat-20"),
+                                          model_filename="mtat-20/2023-03-27-11-49-27.pth")
+    }
 
 
 def update_music_track(upload):
-    with NamedTemporaryFile(suffix="mp3") as temp:
+    st.write("## Visualisation of music tagging models")
+    with NamedTemporaryFile(suffix="mp3") as temp, st.spinner('Loading...'):
         temp.write(upload.getvalue())
         temp.seek(0)
 
@@ -37,7 +35,6 @@ def update_music_track(upload):
         fig.colorbar(img, ax=ax, format="%+2.f dB")
 
         prediction = st.session_state.current_model.predict_tags(mp3_file=temp.name)
-    st.write("## Visualisation of music tagging models")
     st.write('#### Mel-frequency spectrogram')
     librosa.display.waveshow(y, sr=sr, ax=ax[0])
     st.pyplot(fig)
@@ -58,6 +55,6 @@ if __name__ == '__main__':
         index=st.session_state.selected_model_index, key='selected_model_name')
 
     st.session_state.current_model = st.session_state.data_models[st.session_state.selected_model_name]
-
+    print(f"Setting current model to: {st.session_state.selected_model_name}")
     if st.session_state.uploaded_file is not None:
         update_music_track(st.session_state.uploaded_file)
