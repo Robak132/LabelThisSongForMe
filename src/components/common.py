@@ -26,11 +26,11 @@ class Statistics:
 @dataclass
 class Config:
     preprocessor: object = None
-    model: Module = Musicnn()
+    model: object = Musicnn()
     n_epochs: int = 5
     batch_size: int = 16
     lr: float = 1e-4
-    model_filename_path: str = "components"
+    model_filename_path: str = "models"
     data_path: str = 'data'
     log_step: int = 100
     sr: int = 16000

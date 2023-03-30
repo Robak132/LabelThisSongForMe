@@ -5,6 +5,7 @@ import librosa.display
 import librosa.feature
 import streamlit as st
 from matplotlib import pyplot as plt
+from sklearn.neighbors import KNeighborsClassifier
 
 from src.external.model import Musicnn
 from src.components.common import create_tagogram, plot_probability_graph, Config
@@ -15,15 +16,18 @@ if 'selected_model_index' not in st.session_state:
 
 if 'data_models' not in st.session_state:
     st.session_state.data_models = {
-        "MusicNN (10 classes)": Predictor(Config(model=Musicnn(n_class=10), dataset_split_path="split", dataset_name="mtat-10"),
+        "MusicNN (10 classes)": Predictor(Config(model=Musicnn(n_class=10),
+                                                 dataset_name="mtat-10"),
                                           model_filename="mtat-10/2023-03-26-13-22-52.pth"),
-        "MusicNN (20 classes)": Predictor(Config(model=Musicnn(n_class=20), dataset_split_path="split", dataset_name="mtat-20"),
+        "MusicNN (20 classes)": Predictor(Config(model=Musicnn(n_class=20),
+                                                 dataset_name="mtat-20"),
                                           model_filename="mtat-20/2023-03-27-11-49-27.pth"),
-        "KNeighborsClassifier (10 classes)": SklearnPredictor(Config(dataset_split_path="split", model_filename_path="models", dataset_name="mtat-10"),
-                                                 model_filename="KNeighborsClassifier/mtat-10.bin"),
-        "KNeighborsClassifier (20 classes)": SklearnPredictor(Config(dataset_split_path="split", model_filename_path="models", dataset_name="mtat-20"),
-                                                 model_filename="KNeighborsClassifier/mtat-20.bin")
-    }
+        "KNeighborsClassifier (10 classes)": SklearnPredictor(Config(model=KNeighborsClassifier(),
+                                                                     dataset_name="mtat-10"),
+                                                              model_filename="mtat-10/model.bin"),
+        "KNeighborsClassifier (20 classes)": SklearnPredictor(Config(model=KNeighborsClassifier(),
+                                                                     dataset_name="mtat-20"),
+                                                              model_filename="mtat-20/model.bin")}
 
 
 def update_music_track(upload):
@@ -56,7 +60,7 @@ if __name__ == '__main__':
 
     st.sidebar.write("#### Model")
     st.sidebar.selectbox(label='Select model:', options=st.session_state.data_models.keys(),
-        index=st.session_state.selected_model_index, key='selected_model_name')
+                         index=st.session_state.selected_model_index, key='selected_model_name')
 
     st.session_state.current_model = st.session_state.data_models[st.session_state.selected_model_name]
     print(f"Setting current model to: {st.session_state.selected_model_name}")

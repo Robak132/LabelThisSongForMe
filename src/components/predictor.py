@@ -62,11 +62,14 @@ class SklearnPredictor:
         tags_path = os.path.join(config.dataset_split_path, config.dataset_name, "tags.npy")
         self.tags = np.load(tags_path, allow_pickle=True)
 
-        self.model_filename_path = config.model_filename_path
+        self.model_filename_path = os.path.join(config.model_filename_path, config.model.__class__.__name__)
         self.model_filename = model_filename
 
         # cuda
         self.is_cuda = torch.cuda.is_available() if cuda is None else cuda
+
+        # model
+        self.model = config.model
 
         self.data_path = config.data_path
         self.input_length = config.input_length
