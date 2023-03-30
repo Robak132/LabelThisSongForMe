@@ -7,8 +7,8 @@ import streamlit as st
 from matplotlib import pyplot as plt
 
 from src.external.model import Musicnn
-from src.models.common import create_tagogram, plot_probability_graph, Config
-from src.models.predictor import Predictor, SklearnPredictor
+from src.components.common import create_tagogram, plot_probability_graph, Config
+from src.components.predictor import Predictor, SklearnPredictor
 
 if 'selected_model_index' not in st.session_state:
     st.session_state.selected_model_index = 0
@@ -27,7 +27,7 @@ if 'data_models' not in st.session_state:
 
 
 def update_music_track(upload):
-    st.write("## Visualisation of music tagging models")
+    st.write("## Visualisation of music tagging components")
     with NamedTemporaryFile(suffix="mp3") as temp, st.spinner('Loading...'):
         temp.write(upload.getvalue())
         temp.seek(0)

@@ -1,7 +1,7 @@
 import argparse
 
-from models.common import create_tagogram, plot_probability_graph, Config
-from models.tester import Tester
+from components.common import create_tagogram, plot_probability_graph, Config
+from components.tester import Tester
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Script to tag music using selected model')

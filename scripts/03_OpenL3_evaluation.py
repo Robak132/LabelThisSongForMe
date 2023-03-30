@@ -12,8 +12,8 @@ from sklearn.multioutput import MultiOutputClassifier
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 
-from models.common import load_file_lists
-from models.preprocessor import OpenL3PreProcessor
+from components.common import load_file_lists
+from components.preprocessor import OpenL3PreProcessor
 
 
 def set_seed(seed: int = 42) -> None:

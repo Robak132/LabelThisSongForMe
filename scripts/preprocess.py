@@ -1,5 +1,5 @@
-from models.common import load_file_lists
-from models.preprocessor import OpenL3PreProcessor
+from components.common import load_file_lists
+from components.preprocessor import OpenL3PreProcessor
 
 if __name__ == '__main__':
     p = OpenL3PreProcessor(input_path="../data/mtat/mp3",

@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 import torch
 
-from src.models.preprocessor import OpenL3PreProcessor
-from src.models.common import move_to_cuda, load_model, Config, convert_mp3_to_npy, get_data_chunked
+from src.components.preprocessor import OpenL3PreProcessor
+from src.components.common import move_to_cuda, load_model, Config, convert_mp3_to_npy, get_data_chunked
 
 
 class Predictor:

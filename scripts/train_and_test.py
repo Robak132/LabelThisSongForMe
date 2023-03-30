@@ -1,8 +1,8 @@
 from external.model import Musicnn
-from models.common import Config
-from models.preprocessor import PreProcessor
-from models.tester import Tester
-from models.trainer import Trainer
+from components.common import Config
+from components.preprocessor import PreProcessor
+from components.tester import Tester
+from components.trainer import Trainer
 
 if __name__ == '__main__':
     config = Config(model=Musicnn(n_class=10),
@@ -11,7 +11,7 @@ if __name__ == '__main__':
                     n_epochs=5,
                     batch_size=16,
                     lr=1e-4,
-                    model_filename_path="models",
+                    model_filename_path="components",
                     data_path='data',
                     log_step=100,
                     sr=16000,

@@ -5,9 +5,9 @@ import torch
 import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime, timedelta
-from src.models.common import move_to_cuda, current_time, Config, load_file_lists
-from src.models.loader import get_audio_loader
-from src.models.tester import Tester, Statistics
+from src.components.common import move_to_cuda, current_time, Config, load_file_lists
+from src.components.loader import get_audio_loader
+from src.components.tester import Tester, Statistics
 
 
 class Trainer:

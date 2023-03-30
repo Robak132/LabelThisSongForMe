@@ -5,8 +5,8 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 
-from models.predictor import Predictor
-from src.models.common import move_to_cuda, get_auc, Statistics, Config, current_time
+from components.predictor import Predictor
+from src.components.common import move_to_cuda, get_auc, Statistics, Config, current_time
 
 
 class BaseTester:

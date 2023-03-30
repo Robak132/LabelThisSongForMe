@@ -5,7 +5,7 @@ import numpy as np
 import torchopenl3
 import tqdm
 
-from models.common import convert_mp3_to_npy
+from components.common import convert_mp3_to_npy
 
 
 class BasePreProcessor:

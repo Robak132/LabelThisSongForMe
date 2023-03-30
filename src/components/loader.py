@@ -2,7 +2,7 @@ import os
 import numpy as np
 from torch.utils import data
 
-from src.models.common import get_random_data_chunk
+from src.components.common import get_random_data_chunk
 
 
 class AudioFolder(data.Dataset):
