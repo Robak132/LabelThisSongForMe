@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 
 from src.external.model import Musicnn
 from src.models.common import create_tagogram, plot_probability_graph, Config
-from src.models.predictor import Predictor
+from src.models.predictor import Predictor, SklearnPredictor
 
 if 'selected_model_index' not in st.session_state:
     st.session_state.selected_model_index = 0
@@ -18,7 +18,11 @@ if 'data_models' not in st.session_state:
         "MusicNN (10 classes)": Predictor(Config(model=Musicnn(n_class=10), dataset_split_path="split", dataset_name="mtat-10"),
                                           model_filename="mtat-10/2023-03-26-13-22-52.pth"),
         "MusicNN (20 classes)": Predictor(Config(model=Musicnn(n_class=20), dataset_split_path="split", dataset_name="mtat-20"),
-                                          model_filename="mtat-20/2023-03-27-11-49-27.pth")
+                                          model_filename="mtat-20/2023-03-27-11-49-27.pth"),
+        "KNeighborsClassifier (10 classes)": SklearnPredictor(Config(dataset_split_path="split", model_filename_path="models", dataset_name="mtat-10"),
+                                                 model_filename="KNeighborsClassifier/mtat-10.bin"),
+        "KNeighborsClassifier (20 classes)": SklearnPredictor(Config(dataset_split_path="split", model_filename_path="models", dataset_name="mtat-20"),
+                                                 model_filename="KNeighborsClassifier/mtat-20.bin")
     }
 
 

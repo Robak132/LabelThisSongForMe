@@ -1,22 +1,19 @@
 import os
 import pathlib
 
-import librosa
 import numpy as np
 import torchopenl3
 import tqdm
 
-
-def convert_mp3_to_npy(mp3_file, sr) -> np.ndarray:
-    x, _ = librosa.load(mp3_file, sr=sr)
-    return x
+from models.common import convert_mp3_to_npy
 
 
 class BasePreProcessor:
-    def __init__(self, input_path, output_path, suffix=None):
+    def __init__(self, input_path=None, output_path=None, sr=16000, suffix=None):
         self.input_path = input_path
         self.output_path = output_path
         self.suffix = suffix
+        self.sr = sr
 
     def run(self, files):
         for filename in tqdm.tqdm(files):
@@ -28,35 +25,33 @@ class BasePreProcessor:
             if not os.path.exists(output_full_filename):
                 try:
                     os.makedirs(os.path.join(*output_full_filename.split("/")[:-1]), exist_ok=True)
-                    self.process(input_full_filename, output_full_filename)
+                    output = self.process(input_full_filename)
+                    np.save(output_full_filename, output)
+
                 except RuntimeError and EOFError:
                     # some audio files are broken
                     print(filename)
                     continue
 
-    def process(self, input_filename, output_filename):
-        raise Exception("You cannot use abstract class")
+    def process(self, input_filename):
+        raise Exception("This method is abstract.")
 
 
 class PreProcessor(BasePreProcessor):
-    def __init__(self, input_path, output_path, sr=16000, suffix=None):
-        super().__init__(input_path, output_path, suffix)
-        self.sr = sr
+    def __init__(self, input_path=None, output_path=None, sr=16000, suffix=None):
+        super().__init__(input_path, output_path, sr, suffix)
 
-    def process(self, input_filename, output_filename):
-        x = convert_mp3_to_npy(input_filename, self.sr)
-        np.save(output_filename, x)
+    def process(self, input_filename):
+        return convert_mp3_to_npy(input_filename, self.sr)
 
 
 class OpenL3PreProcessor(BasePreProcessor):
-    def __init__(self, input_path, output_path, sr=16000, suffix=None):
-        super().__init__(input_path, output_path, suffix)
-        self.sr = sr
+    def __init__(self, input_path=None, output_path=None, sr=16000, suffix=None):
+        super().__init__(input_path, output_path, sr, suffix)
 
-    def process(self, input_filename, output_filename):
+    def process(self, input_filename):
         x = convert_mp3_to_npy(input_filename, self.sr)
         emb, ts = torchopenl3.get_audio_embedding(x, self.sr, content_type="music", input_repr="mel256",
                                                   embedding_size=512, hop_size=1, batch_size=10, sampler="julian",
                                                   verbose=0)
-        x = emb.detach().cpu().numpy()
-        np.save(output_filename, x)
+        return emb.detach().cpu().numpy()

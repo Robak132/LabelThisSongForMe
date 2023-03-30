@@ -148,10 +148,6 @@ class Musicnn(nn.Module):
 
         return out
 
-    @staticmethod
-    def get_name():
-        return "musicnn"
-
 
 class CRNN(nn.Module):
     """

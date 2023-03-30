@@ -6,7 +6,7 @@ import torch.nn as nn
 from tqdm import tqdm
 
 from models.predictor import Predictor
-from src.models.common import move_to_cuda, get_auc, load_model, Statistics, Config, current_time
+from src.models.common import move_to_cuda, get_auc, Statistics, Config, current_time
 
 
 class BaseTester:
@@ -62,7 +62,7 @@ class Tester:
             ground_truth = self.binary[int(ix)]
             y = np.tile(ground_truth, (len(npy_data) // self.input_length, 1))
             y = torch.tensor(y.astype("float32"))
-            out = self.predictor.predict_npy(npy_data, model)
+            out = self.predictor.predict_data(npy_data, model)
             loss = self.loss_function(out, y)
 
             losses.append(float(loss))
