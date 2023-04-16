@@ -1,4 +1,4 @@
-from external.model import Musicnn
+from external.musicnn import Musicnn
 from components.common import Config
 from components.preprocessor import PreProcessor
 from components.tester import Tester

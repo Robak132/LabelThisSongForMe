@@ -10,9 +10,8 @@ from numpy import ndarray
 from plotly.graph_objs import Bar, Figure, Layout
 from sklearn import metrics
 from torch import tensor, Tensor
-from torch.nn import Module
 
-from src.external.model import Musicnn
+from src.external.musicnn import Musicnn
 
 
 @dataclass
