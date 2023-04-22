@@ -27,7 +27,7 @@ if 'data_models' not in st.session_state:
 
 
 def update_music_track(upload):
-    st.write("## Visualisation of music tagging components")
+    st.write("## Visualisation of music tagging models")
     with NamedTemporaryFile(suffix="mp3") as temp, st.spinner('Loading...'):
         temp.write(upload.getvalue())
         temp.seek(0)
@@ -38,12 +38,18 @@ def update_music_track(upload):
         img = librosa.display.specshow(librosa.power_to_db(spectrogram), x_axis='time', y_axis='mel', ax=ax[1])
         fig.colorbar(img, ax=ax, format="%+2.f dB")
 
-        prediction = st.session_state.current_model.predict_tags(mp3_file=temp.name)
+        prediction = st.session_state.current_model.predict_tags_prob(mp3_file=temp.name)
+        predicted_tags = st.session_state.current_model.predict_tags(mp3_file=temp.name)
     st.write('#### Mel-frequency spectrogram')
     librosa.display.waveshow(y, sr=sr, ax=ax[0])
     st.pyplot(fig)
+    st.write(f'#### Assigned tags')
+    st.write(", ".join(predicted_tags))
     st.plotly_chart(plot_probability_graph(prediction), use_container_width=True)
-    st.plotly_chart(create_tagogram(prediction))
+
+    # Tagogram is useful only if more than one chunk
+    if prediction.shape[1] > 1:
+        st.plotly_chart(create_tagogram(prediction))
 
 
 if __name__ == '__main__':

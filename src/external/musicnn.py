@@ -44,6 +44,9 @@ class Musicnn(nn.Module):
         self.dropout = nn.Dropout(0.5)
         self.dense2 = nn.Linear(dense_channel, n_class)
 
+    def get_name(self):
+        return self._get_name()
+
     def forward(self, x):
         # Spectrogram
         x = self.spec(x)
