@@ -83,8 +83,7 @@ class Trainer:
             self.optimizer.zero_grad()
 
             # Forward
-            out_raw = self.model(x)
-            out = torch.sigmoid(out_raw)
+            out = self.model(x)
 
             # Backward
             loss = self.loss_function(out, y)
@@ -109,6 +108,7 @@ class Trainer:
         self.writer.add_scalar('Loss/valid', stats.mean_loss, epoch)
         self.writer.add_scalar('AUC/ROC', stats.roc_auc, epoch)
         self.writer.add_scalar('AUC/PR', stats.pr_auc, epoch)
+        self.writer.add_scalar('F1 Score', stats.f1_score, epoch)
 
     def validation(self, best_metric, epoch: int):
         stats = self.validator.test(self.model)

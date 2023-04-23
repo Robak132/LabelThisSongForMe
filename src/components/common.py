@@ -52,14 +52,12 @@ def get_metrics(est_array, gt_array):
     return roc_aucs, pr_aucs, f1_score
 
 
-def get_data_chunked(data, input_length) -> Tensor:
-    batch_size = len(data) // input_length
-    return tensor(np.array([data[input_length * i: input_length * (i + 1)] for i in range(batch_size)]))
-
-
 def move_to_cuda(x):
-    if torch.cuda.is_available():
-        x = x.cuda()
+    try:
+        if torch.cuda.is_available():
+            x = x.cuda()
+    except Exception:
+        print("Cannot use cuda for model, defaulting to cpu")
     return x
 
 

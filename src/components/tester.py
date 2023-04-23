@@ -40,6 +40,7 @@ class Tester:
             self.test_list = np.load(test_path, allow_pickle=True)
         self.data_path = config.data_path
         self.input_length = config.input_length
+
     def get_metrics(self, est_array, gt_array):
         roc_aucs = metrics.roc_auc_score(gt_array, est_array, average='macro')
         pr_aucs = metrics.average_precision_score(gt_array, est_array, average='macro')
@@ -64,8 +65,7 @@ class Tester:
             y = move_to_cuda(y)
 
             # Forward
-            out_raw = self.predictor.predict_data_prob(npy_data, model)
-            out = torch.sigmoid(out_raw)
+            out = self.predictor.predict_data_prob(npy_data, model)
 
             # Backward
             loss = self.loss_function(out, y)

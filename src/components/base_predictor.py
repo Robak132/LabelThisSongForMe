@@ -28,40 +28,26 @@ class BasePredictor:
         self.preprocessor = None
 
         # model
-        try:
-            self.model = move_to_cuda(config.model)
-        except Exception:
-            self.model = config.model
+        self.model = self._load_model(config.model)
+        self.model = move_to_cuda(self.model)
 
-    def predict_tags_prob(self, mp3_file, model=None) -> pd.DataFrame:
-        if model is None:
-            model = self._load_model()
-
-        out = self.predict_file_prob(mp3_file, model).T
+    def predict_tags_prob(self, mp3_file) -> pd.DataFrame:
+        out = self.predict_file_prob(mp3_file).T
         df = pd.DataFrame(out, index=self.tags)
         df = df.reindex(df.mean(axis=1).sort_values(ascending=False).index)
         return df
 
-    def predict_tags(self, mp3_file, model=None) -> list[str]:
-        if model is None:
-            model = self._load_model()
-
-        out = self.predict_file(mp3_file, model).T
+    def predict_tags(self, mp3_file) -> list[str]:
+        out = self.predict_file(mp3_file).T
         df = pd.DataFrame(out, index=self.tags)
         df = df[df[0] == 1]
         return df.index.to_list()
 
-    def predict_file_prob(self, mp3_file, model=None):
-        if model is None:
-            model = self._load_model()
+    def predict_file_prob(self, mp3_file):
+        return self.predict_data_prob(self._preprocessor_func(mp3_file).flatten())
 
-        return self.predict_data_prob(self._preprocessor_func(mp3_file), model)
-
-    def predict_file(self, mp3_file, model=None):
-        if model is None:
-            model = self._load_model()
-
-        return self.predict_data(self._preprocessor_func(mp3_file), model)
+    def predict_file(self, mp3_file):
+        return self.predict_data(self._preprocessor_func(mp3_file).flatten())
 
     def predict_data(self, x, model=None):
         raise Exception("This is abstract method!")
@@ -69,7 +55,7 @@ class BasePredictor:
     def predict_data_prob(self, x, model=None):
         raise Exception("This is abstract method!")
 
-    def _load_model(self):
+    def _load_model(self, model):
         raise Exception("This is abstract method!")
 
     def _preprocessor_func(self, mp3_file):
