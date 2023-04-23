@@ -1,6 +1,7 @@
 import argparse
 
-from components.common import create_tagogram, plot_probability_graph, Config
+from components.common import create_tagogram, plot_probability_graph
+from components.config import Config
 from components.tester import Tester
 
 if __name__ == '__main__':

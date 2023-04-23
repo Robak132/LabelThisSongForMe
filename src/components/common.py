@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Union
 
 import librosa
 import numpy as np
@@ -10,12 +9,6 @@ import torch
 from numpy import ndarray
 from plotly.graph_objs import Bar, Figure, Layout
 from sklearn import metrics
-from sklearn.base import ClassifierMixin
-from torch import tensor, Tensor
-from torch.nn import Module
-
-from components.preprocessor import BasePreProcessor
-from src.external.musicnn import Musicnn
 
 
 @dataclass
@@ -27,28 +20,11 @@ class Statistics:
         self.f1_score = f1_score
 
 
-@dataclass
-class Config:
-    preprocessor: BasePreProcessor = None
-    model: Union[Module, ClassifierMixin] = Musicnn()
-    n_epochs: int = 5
-    batch_size: int = 16
-    lr: float = 1e-4
-    weight_decay: float = 1e-5
-    model_filename_path: str = "models"
-    data_path: str = 'data'
-    log_step: int = 100
-    sr: int = 16000
-    input_length: int = 3 * sr
-    dataset_split_path: str = "split"
-    dataset_name: str = "mtat"
-    logs_path: str = "logs"
-
-
 def get_metrics(est_array, gt_array):
     roc_aucs = metrics.roc_auc_score(gt_array, est_array, average='macro')
     pr_aucs = metrics.average_precision_score(gt_array, est_array, average='macro')
-    f1_score = metrics.f1_score(gt_array, est_array >= 0.5, average='macro')
+    est_bin_array = np.where(est_array >= 0.5, 1, 0)
+    f1_score = metrics.f1_score(gt_array, est_bin_array, average='macro')
     return roc_aucs, pr_aucs, f1_score
 
 
@@ -88,10 +64,20 @@ def create_tagogram(prediction: pd.DataFrame):
 
 
 def plot_probability_graph(prediction: pd.DataFrame):
-    fig = Figure(data=Bar(x=prediction.mean(axis=1), y=prediction.index, orientation='h'),
+    prediction = prediction.max(axis=1)
+    prediction = prediction.sort_values()
+    fig = Figure(data=Bar(x=prediction, y=prediction.index, orientation='h'),
                  layout=Layout(title="Mean tag probability"))
-    fig.update_layout(yaxis=dict(autorange="reversed"))
     return fig
+
+
+def get_tags(prediction: pd.DataFrame):
+    predicted_tags = prediction.max(axis=1)
+    predicted_tags = predicted_tags.sort_values(ascending=True)
+    predicted_tags = predicted_tags.apply(lambda x: 1 if x >= 0.5 else 0)
+    predicted_tags = predicted_tags[predicted_tags == 1]
+    predicted_tags = predicted_tags.index.to_list()
+    return predicted_tags
 
 
 def load_file_lists(file_lists: list[str]) -> ndarray:

@@ -7,9 +7,10 @@ import streamlit as st
 from matplotlib import pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
 
-from src.external.musicnn import Musicnn
-from src.components.common import create_tagogram, plot_probability_graph, Config
+from src.components.common import create_tagogram, plot_probability_graph, get_tags
+from src.components.config import Config
 from src.components.predictor import Predictor, SklearnPredictor
+from src.external.musicnn import Musicnn
 
 if 'selected_model_index' not in st.session_state:
     st.session_state.selected_model_index = 0
@@ -17,13 +18,13 @@ if 'selected_model_index' not in st.session_state:
 if 'data_models' not in st.session_state:
     st.session_state.data_models = {
         "MusicNN (10 classes)": Predictor(Config(model=Musicnn(n_class=10), dataset_name="mtat-10"),
-                                          model_filename="mtat-10/2023-03-26-13-22-52.pth"),
+                                          model_filename="2023-04-23-18-16-20.pth"),
         "MusicNN (20 classes)": Predictor(Config(model=Musicnn(n_class=20), dataset_name="mtat-20"),
-                                          model_filename="mtat-20/2023-03-27-11-49-27.pth"),
+                                          model_filename="2023-03-27-11-49-27.pth"),
         "KNeighborsClassifier (10 classes)": SklearnPredictor(Config(model=KNeighborsClassifier(), dataset_name="mtat-10"),
-                                                              model_filename="mtat-10/model.bin"),
+                                                              model_filename="model.bin"),
         "KNeighborsClassifier (20 classes)": SklearnPredictor(Config(model=KNeighborsClassifier(), dataset_name="mtat-20"),
-                                                              model_filename="mtat-20/model.bin")}
+                                                              model_filename="model.bin")}
 
 
 def update_music_track(upload):
@@ -39,12 +40,11 @@ def update_music_track(upload):
         fig.colorbar(img, ax=ax, format="%+2.f dB")
 
         prediction = st.session_state.current_model.predict_tags_prob(mp3_file=temp.name)
-        predicted_tags = st.session_state.current_model.predict_tags(mp3_file=temp.name)
     st.write('#### Mel-frequency spectrogram')
     librosa.display.waveshow(y, sr=sr, ax=ax[0])
     st.pyplot(fig)
     st.write(f'#### Assigned tags')
-    st.write(", ".join(predicted_tags))
+    st.write(", ".join(get_tags(prediction)))
     st.plotly_chart(plot_probability_graph(prediction), use_container_width=True)
 
     # Tagogram is useful only if more than one chunk

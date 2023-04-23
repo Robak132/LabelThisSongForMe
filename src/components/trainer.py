@@ -5,7 +5,9 @@ import torch
 import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime, timedelta
-from src.components.common import move_to_cuda, current_time, Config, load_file_lists
+
+from src.components.config import Config
+from src.components.common import move_to_cuda, current_time, load_file_lists
 from src.components.loader import get_audio_loader
 from src.components.tester import Tester, Statistics
 
@@ -37,7 +39,7 @@ class Trainer:
 
         # model path and step size
         self.dataset_name = config.dataset_name
-        self.model_filename_path = os.path.join(config.model_filename_path, config.model.get_name())
+        self.model_filename_path = os.path.join(config.model_filename_path, config.model.__class__.__name__, self.dataset_name)
         os.makedirs(os.path.join(*self.model_filename_path.split("/")), exist_ok=True)
 
         # cuda
@@ -116,6 +118,6 @@ class Trainer:
         if stats.f1_score > best_metric:
             print(f'[{current_time()}] Found new best model. Saving...')
             best_metric = stats.f1_score
-            torch.save(self.model.state_dict(), os.path.join(self.model_filename_path, self.dataset_name, self.model_file_name))
+            torch.save(self.model.state_dict(), os.path.join(self.model_filename_path, self.model_file_name))
             print(f'[{current_time()}] Saved')
         return best_metric

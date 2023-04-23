@@ -4,13 +4,10 @@ import random
 
 import numpy as np
 import torch
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.svm import SVC
-from sklearn.tree import DecisionTreeClassifier
 
 from components.common import load_file_lists
 from components.preprocessor import OpenL3PreProcessor

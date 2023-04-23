@@ -1,4 +1,4 @@
-from components.common import Config
+from components.config import Config
 from components.tester import Tester
 from components.trainer import Trainer
 from external.musicnn import Musicnn
@@ -7,7 +7,7 @@ if __name__ == '__main__':
     config = Config(model=Musicnn(n_class=10),
                     # preprocessor=PreProcessor(input_path="../data/mtat/mp3", output_path="../data/mtat/npy", suffix="npy", sr=16000),
                     # preprocessor=OpenL3PreProcessor(input_path="../data/mtat/mp3", output_path="../data/mtat/emb", suffix="npy", sr=16000),
-                    n_epochs=10,
+                    n_epochs=20,
                     batch_size=16,
                     lr=1e-3,
                     weight_decay=1e-5,
@@ -26,5 +26,5 @@ if __name__ == '__main__':
 
     # Tester
     tester = Tester(config, model_filename=trainer.model_file_name)
-    # tester = Tester(config, model_filename="mtat-10/2023-03-18-11-03-47.pth")
+    # tester = Tester(config, model_filename="2023-04-23-18-16-20.pth")
     tester.test()

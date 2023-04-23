@@ -3,10 +3,12 @@ import os
 import numpy as np
 import torch
 import torch.nn as nn
+from torch import tensor
 from tqdm import tqdm
 
-from components.predictor import Predictor
-from src.components.common import move_to_cuda, get_metrics, Statistics, Config, current_time, load_model
+from src.components.config import Config
+from src.components.predictor import Predictor
+from src.components.common import move_to_cuda, get_metrics, Statistics, current_time, load_model
 from sklearn import metrics
 
 
@@ -21,7 +23,7 @@ class Tester:
 
         self.predictor = Predictor(config, model_filename, cuda)
 
-        self.model_filename_path = os.path.join(config.model_filename_path, config.model.get_name())
+        self.model_filename_path = os.path.join(config.model_filename_path, config.model.__class__.__name__, config.dataset_name)
         self.model_filename = model_filename
 
         # cuda
@@ -59,20 +61,19 @@ class Tester:
             npy_path = os.path.join(self.data_path, 'mtat/npy', mp3_path.split('/')[0], mp3_path.split('/')[1][:-3]) + 'npy'
             npy_data = np.load(npy_path, mmap_mode='c')
 
-            ground_truth = self.binary[int(ix)]
-            y = np.tile(ground_truth, (len(npy_data) // self.input_length, 1))
-            y = torch.tensor(y.astype("float32"))
-            y = move_to_cuda(y)
+            ground_truth = tensor(self.binary[int(ix)], dtype=torch.float32)
+            ground_truth = move_to_cuda(ground_truth)
 
             # Forward
             out = self.predictor.predict_data_prob(npy_data, model)
+            out, _ = torch.max(out, 0)
 
             # Backward
-            loss = self.loss_function(out, y)
+            loss = self.loss_function(out, ground_truth)
             losses.append(float(loss))
 
-            est_array.append(out.cpu().detach().numpy().mean(axis=0))
-            gt_array.append(ground_truth)
+            est_array.append(out.detach().cpu().numpy())
+            gt_array.append(ground_truth.detach().cpu().numpy())
         mean_loss = np.mean(losses)
         roc_auc, pr_auc, f1_score = get_metrics(np.array(est_array), np.array(gt_array))
         print(f"[{current_time()}] Loss/Valid: {mean_loss:.4f}")

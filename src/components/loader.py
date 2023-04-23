@@ -19,7 +19,7 @@ class AudioFolder(data.Dataset):
 
     def __getitem__(self, index):
         ix, fn = self.files[index]
-        npy_path = os.path.join(self.data_path, 'mtat/npy', Path(fn).with_suffix("npy"))
+        npy_path = os.path.join(self.data_path, 'mtat/npy', Path(fn).with_suffix(".npy"))
         data_chunk = self.get_random_data_chunk(np.load(npy_path, mmap_mode='c'))
         return data_chunk, self.binary[int(ix)].astype('float32')
 
