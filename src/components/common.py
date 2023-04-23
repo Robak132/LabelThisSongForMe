@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Union
 
 import librosa
 import numpy as np
@@ -9,26 +10,31 @@ import torch
 from numpy import ndarray
 from plotly.graph_objs import Bar, Figure, Layout
 from sklearn import metrics
+from sklearn.base import ClassifierMixin
 from torch import tensor, Tensor
+from torch.nn import Module
 
+from components.preprocessor import BasePreProcessor
 from src.external.musicnn import Musicnn
 
 
 @dataclass
 class Statistics:
-    def __init__(self, roc_auc, pr_auc, mean_loss):
+    def __init__(self, roc_auc, pr_auc, mean_loss, f1_score):
         self.roc_auc = roc_auc
         self.pr_auc = pr_auc
         self.mean_loss = mean_loss
+        self.f1_score = f1_score
 
 
 @dataclass
 class Config:
-    preprocessor: object = None
-    model: object = Musicnn()
+    preprocessor: BasePreProcessor = None
+    model: Union[Module, ClassifierMixin] = Musicnn()
     n_epochs: int = 5
     batch_size: int = 16
     lr: float = 1e-4
+    weight_decay: float = 1e-5
     model_filename_path: str = "models"
     data_path: str = 'data'
     log_step: int = 100
@@ -36,17 +42,14 @@ class Config:
     input_length: int = 3 * sr
     dataset_split_path: str = "split"
     dataset_name: str = "mtat"
+    logs_path: str = "logs"
 
 
-def get_auc(est_array, gt_array):
+def get_metrics(est_array, gt_array):
     roc_aucs = metrics.roc_auc_score(gt_array, est_array, average='macro')
     pr_aucs = metrics.average_precision_score(gt_array, est_array, average='macro')
-    return roc_aucs, pr_aucs
-
-
-def get_random_data_chunk(data, input_length) -> Tensor:
-    random_idx = int(np.floor(np.random.random(1) * (len(data) - input_length)))
-    return tensor(np.array(data[random_idx:random_idx + input_length]))
+    f1_score = metrics.f1_score(gt_array, est_array >= 0.5, average='macro')
+    return roc_aucs, pr_aucs, f1_score
 
 
 def get_data_chunked(data, input_length) -> Tensor:

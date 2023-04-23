@@ -1,8 +1,9 @@
 import os
-import numpy as np
-from torch.utils import data
+from pathlib import Path
 
-from src.components.common import get_random_data_chunk
+import numpy as np
+from torch import tensor, Tensor
+from torch.utils import data
 
 
 class AudioFolder(data.Dataset):
@@ -12,10 +13,14 @@ class AudioFolder(data.Dataset):
         self.files = np.load(files_path, allow_pickle=True)
         self.binary = {row[0]: row[1:] for row in np.load(binary_path, allow_pickle=True)}
 
+    def get_random_data_chunk(self, data) -> Tensor:
+        random_idx = int(np.floor(np.random.random(1) * (len(data) - self.input_length)))
+        return tensor(np.array(data[random_idx:random_idx + self.input_length]))
+
     def __getitem__(self, index):
         ix, fn = self.files[index]
-        npy_path = os.path.join(self.data_path, 'mtat', 'npy', fn.split('/')[0], fn.split('/')[1][:-3]) + 'npy'
-        data_chunk = get_random_data_chunk(np.load(npy_path, mmap_mode='c'), self.input_length)
+        npy_path = os.path.join(self.data_path, 'mtat/npy', Path(fn).with_suffix("npy"))
+        data_chunk = self.get_random_data_chunk(np.load(npy_path, mmap_mode='c'))
         return data_chunk, self.binary[int(ix)].astype('float32')
 
     def __len__(self):

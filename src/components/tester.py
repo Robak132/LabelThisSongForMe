@@ -6,17 +6,8 @@ import torch.nn as nn
 from tqdm import tqdm
 
 from components.predictor import Predictor
-from src.components.common import move_to_cuda, get_auc, Statistics, Config, current_time
-
-
-class BaseTester:
-    def __init__(self, config: Config = None, model_filename: str = None, cuda: bool = None):
-        if config is None:
-            config = Config()
-
-        self.model_filename_path = os.path.join(config.model_filename_path, config.model.get_name())
-        self.model_filename = model_filename
-
+from src.components.common import move_to_cuda, get_metrics, Statistics, Config, current_time, load_model
+from sklearn import metrics
 
 
 class Tester:
@@ -49,8 +40,16 @@ class Tester:
             self.test_list = np.load(test_path, allow_pickle=True)
         self.data_path = config.data_path
         self.input_length = config.input_length
+    def get_metrics(self, est_array, gt_array):
+        roc_aucs = metrics.roc_auc_score(gt_array, est_array, average='macro')
+        pr_aucs = metrics.average_precision_score(gt_array, est_array, average='macro')
+        f1_score = metrics.f1_score(gt_array, est_array >= 0.5, average='macro')
+        return roc_aucs, pr_aucs, f1_score
 
-    def test(self, model) -> Statistics:
+    def test(self, model=None) -> Statistics:
+        if model is None:
+            model = load_model(os.path.join(self.model_filename_path, self.model_filename), self.model)
+
         est_array = []
         gt_array = []
         losses = []
@@ -62,15 +61,22 @@ class Tester:
             ground_truth = self.binary[int(ix)]
             y = np.tile(ground_truth, (len(npy_data) // self.input_length, 1))
             y = torch.tensor(y.astype("float32"))
-            out = self.predictor.predict_data(npy_data, model)
-            loss = self.loss_function(out, y)
+            y = move_to_cuda(y)
 
+            # Forward
+            out_raw = self.predictor.predict_data_prob(npy_data, model)
+            out = torch.sigmoid(out_raw)
+
+            # Backward
+            loss = self.loss_function(out, y)
             losses.append(float(loss))
-            est_array.append(np.array(out).mean(axis=0))
+
+            est_array.append(out.cpu().detach().numpy().mean(axis=0))
             gt_array.append(ground_truth)
         mean_loss = np.mean(losses)
-        roc_auc, pr_auc = get_auc(np.array(est_array), np.array(gt_array))
-        print(f"[{current_time()}] Loss/valid: {mean_loss:.4f}")
+        roc_auc, pr_auc, f1_score = get_metrics(np.array(est_array), np.array(gt_array))
+        print(f"[{current_time()}] Loss/Valid: {mean_loss:.4f}")
+        print(f"[{current_time()}] F1 Score: {f1_score:.4f}")
         print(f"[{current_time()}] AUC/ROC: {roc_auc:.4f}")
         print(f"[{current_time()}] AUC/PR: {pr_auc:.4f}")
-        return Statistics(roc_auc, pr_auc, mean_loss)
+        return Statistics(roc_auc, pr_auc, mean_loss, f1_score)
