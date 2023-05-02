@@ -7,8 +7,8 @@ import torch
 from torch import tensor
 from tqdm import tqdm
 
-from src.components.common import move_to_cuda, Statistics, load_model
-from src.components.config import Config
+from src.utils.common import move_to_cuda, Statistics, load_model
+from src.utils.config import Config
 from src.components.predictor import Predictor, SklearnPredictor
 from src.interfaces.base_tester import BaseTester
 

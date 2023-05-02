@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.svm import SVC
 
-from components.common import load_file_lists
+from utils.common import load_file_lists
 from components.preprocessor import OpenL3PreProcessor
 
 

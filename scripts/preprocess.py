@@ -1,4 +1,4 @@
-from components.common import load_file_lists
+from utils.common import load_file_lists
 from components.preprocessor import OpenL3PreProcessor
 
 if __name__ == '__main__':

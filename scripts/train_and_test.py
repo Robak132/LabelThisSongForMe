@@ -1,4 +1,4 @@
-from components.config import Config
+from utils.config import Config
 from components.tester import Tester
 from components.trainer import Trainer
 from external.musicnn import Musicnn

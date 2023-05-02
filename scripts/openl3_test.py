@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.metrics import classification_report
 from sklearn.neighbors import KNeighborsClassifier
 
-from components.config import Config
+from utils.config import Config
 from components.tester import SklearnTester
 
 if __name__ == '__main__':

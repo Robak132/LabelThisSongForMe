@@ -1,6 +1,6 @@
 import argparse
 import torchopenl3
-from components.common import convert_mp3_to_npy
+from utils.common import convert_mp3_to_npy
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Script to create embeddings from selected audio file')

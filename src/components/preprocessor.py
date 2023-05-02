@@ -1,7 +1,7 @@
 import torchopenl3
 
-from src.components.common import convert_mp3_to_npy
-from interfaces.base_preprocessor import BasePreProcessor
+from src.utils.common import convert_mp3_to_npy
+from src.interfaces.base_preprocessor import BasePreProcessor
 
 
 class PreProcessor(BasePreProcessor):

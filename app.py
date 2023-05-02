@@ -7,8 +7,8 @@ import streamlit as st
 from matplotlib import pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
 
-from src.components.common import create_tagogram, plot_probability_graph, get_tags
-from src.components.config import Config
+from utils.common import create_tagogram, plot_probability_graph, get_tags
+from utils.config import Config
 from src.components.predictor import Predictor, SklearnPredictor
 from src.external.musicnn import Musicnn
 

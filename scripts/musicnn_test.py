@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 from sklearn.metrics import classification_report
 
-from components.config import Config
+from utils.config import Config
 from components.tester import Tester
 from external.musicnn import Musicnn
 

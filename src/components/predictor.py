@@ -5,9 +5,9 @@ import numpy as np
 from numpy import ndarray
 from torch import tensor, Tensor
 
-from interfaces.base_predictor import BasePredictor
-from src.components.common import move_to_cuda, load_model, convert_mp3_to_npy
-from src.components.config import Config
+from src.interfaces.base_predictor import BasePredictor
+from src.utils.common import move_to_cuda, load_model, convert_mp3_to_npy
+from src.utils.config import Config
 from src.components.preprocessor import OpenL3PreProcessor
 
 

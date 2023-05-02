@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import torch
 
-from src.components.config import Config
-from src.components.common import move_to_cuda
+from src.utils.config import Config
+from src.utils.common import move_to_cuda
 
 
 class BasePredictor:
@@ -42,9 +42,6 @@ class BasePredictor:
         return self.predict_data_prob(self._preprocessor_func(mp3_file).flatten())
 
     def predict_data_prob(self, x, model=None):
-        raise Exception("This is abstract method!")
-
-    def _load_model(self, model):
         raise Exception("This is abstract method!")
 
     def _preprocessor_func(self, mp3_file):

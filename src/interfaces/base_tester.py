@@ -4,8 +4,8 @@ import numpy as np
 import torch
 from torch import nn
 
-from components.common import Statistics, move_to_cuda, current_time
-from components.config import Config
+from src.utils.common import Statistics, move_to_cuda, current_time
+from src.utils.config import Config
 
 
 class BaseTester:
