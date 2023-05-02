@@ -2,13 +2,12 @@ import os
 import pickle
 
 import numpy as np
-import torch
 from numpy import ndarray
 from torch import tensor, Tensor
 
-from src.components.config import Config
 from src.components.base_predictor import BasePredictor
 from src.components.common import move_to_cuda, load_model, convert_mp3_to_npy
+from src.components.config import Config
 from src.components.preprocessor import OpenL3PreProcessor
 
 
@@ -48,7 +47,8 @@ class SklearnPredictor(BasePredictor):
         if model is None:
             model = self.model
 
-        return np.array(model.predict_proba(np.array(x).reshape(1, -1)))[:, :, 1].reshape((1, -1))
+        out = model.predict_proba(x.reshape(-1, 15360))
+        return np.array(out)[:, :, 1].T
 
     def _load_model(self, model):
         return pickle.load(open(os.path.join(self.model_filename_path, self.model_filename), "rb"))

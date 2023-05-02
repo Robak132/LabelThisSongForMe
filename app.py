@@ -38,7 +38,6 @@ def update_music_track(upload):
         spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=13)
         img = librosa.display.specshow(librosa.power_to_db(spectrogram), x_axis='time', y_axis='mel', ax=ax[1])
         fig.colorbar(img, ax=ax, format="%+2.f dB")
-
         prediction = st.session_state.current_model.predict_tags_prob(mp3_file=temp.name)
     st.write('#### Mel-frequency spectrogram')
     librosa.display.waveshow(y, sr=sr, ax=ax[0])

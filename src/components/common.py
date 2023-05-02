@@ -13,12 +13,15 @@ from sklearn import metrics
 
 @dataclass
 class Statistics:
-    def __init__(self, roc_auc, pr_auc, mean_loss, f1_score):
-        self.roc_auc = roc_auc
-        self.pr_auc = pr_auc
-        self.mean_loss = mean_loss
-        self.f1_score = f1_score
+    def __init__(self, est_array, gt_array, mean_loss=None):
+        self.mean_loss, self.est_array, self.gt_array = mean_loss, est_array, gt_array
+        self.roc_auc, self.pr_auc, self.f1_score = get_metrics(est_array, gt_array)
 
+        if self.mean_loss is not None:
+            print(f"[{current_time()}] Loss/Valid: {self.mean_loss:.4f}")
+        print(f"[{current_time()}] F1 Score: {self.f1_score:.4f}")
+        print(f"[{current_time()}] AUC/ROC: {self.roc_auc:.4f}")
+        print(f"[{current_time()}] AUC/PR: {self.pr_auc:.4f}")
 
 def get_metrics(est_array, gt_array):
     roc_aucs = metrics.roc_auc_score(gt_array, est_array, average='macro')
@@ -73,7 +76,7 @@ def plot_probability_graph(prediction: pd.DataFrame):
 
 def get_tags(prediction: pd.DataFrame):
     predicted_tags = prediction.max(axis=1)
-    predicted_tags = predicted_tags.sort_values(ascending=True)
+    predicted_tags = predicted_tags.sort_values()
     predicted_tags = predicted_tags.apply(lambda x: 1 if x >= 0.5 else 0)
     predicted_tags = predicted_tags[predicted_tags == 1]
     predicted_tags = predicted_tags.index.to_list()

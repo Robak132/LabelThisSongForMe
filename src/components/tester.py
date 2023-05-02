@@ -1,4 +1,6 @@
 import os
+import pickle
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -6,13 +8,12 @@ import torch.nn as nn
 from torch import tensor
 from tqdm import tqdm
 
+from src.components.common import move_to_cuda, Statistics, current_time, load_model
 from src.components.config import Config
-from src.components.predictor import Predictor
-from src.components.common import move_to_cuda, get_metrics, Statistics, current_time, load_model
-from sklearn import metrics
+from src.components.predictor import Predictor, SklearnPredictor
 
 
-class Tester:
+class BaseTester:
     def __init__(self, config: Config = None, model_filename: str = None, cuda: bool = None, mode: str = "TEST"):
         if config is None:
             config = Config()
@@ -21,7 +22,7 @@ class Tester:
         test_path = os.path.join(config.dataset_split_path, config.dataset_name, "test.npy")
         binary_path = os.path.join(config.dataset_split_path, config.dataset_name, "binary.npy")
 
-        self.predictor = Predictor(config, model_filename, cuda)
+        self.predictor = self._get_predictor(config, cuda, model_filename)
 
         self.model_filename_path = os.path.join(config.model_filename_path, config.model.__class__.__name__, config.dataset_name)
         self.model_filename = model_filename
@@ -41,13 +42,27 @@ class Tester:
         else:
             self.test_list = np.load(test_path, allow_pickle=True)
         self.data_path = config.data_path
-        self.input_length = config.input_length
 
-    def get_metrics(self, est_array, gt_array):
-        roc_aucs = metrics.roc_auc_score(gt_array, est_array, average='macro')
-        pr_aucs = metrics.average_precision_score(gt_array, est_array, average='macro')
-        f1_score = metrics.f1_score(gt_array, est_array >= 0.5, average='macro')
-        return roc_aucs, pr_aucs, f1_score
+    @staticmethod
+    def _get_predictor(config, cuda, model_filename):
+        raise Exception("This is abstract method!")
+
+    def _load_model(self, model):
+        raise Exception("This is abstract method!")
+
+    def test(self, model=None) -> Statistics:
+        raise Exception("This is abstract method!")
+
+class Tester(BaseTester):
+    def __init__(self, config: Config = None, model_filename: str = None, cuda: bool = None, mode: str = "TEST"):
+        super().__init__(config, model_filename, cuda, mode)
+
+    def _load_model(self, model):
+        return load_model(model, self.model)
+
+    @staticmethod
+    def _get_predictor(config, cuda, model_filename):
+        return Predictor(config, cuda, model_filename)
 
     def test(self, model=None) -> Statistics:
         if model is None:
@@ -75,9 +90,30 @@ class Tester:
             est_array.append(out.detach().cpu().numpy())
             gt_array.append(ground_truth.detach().cpu().numpy())
         mean_loss = np.mean(losses)
-        roc_auc, pr_auc, f1_score = get_metrics(np.array(est_array), np.array(gt_array))
-        print(f"[{current_time()}] Loss/Valid: {mean_loss:.4f}")
-        print(f"[{current_time()}] F1 Score: {f1_score:.4f}")
-        print(f"[{current_time()}] AUC/ROC: {roc_auc:.4f}")
-        print(f"[{current_time()}] AUC/PR: {pr_auc:.4f}")
-        return Statistics(roc_auc, pr_auc, mean_loss, f1_score)
+        return Statistics(np.array(est_array), np.array(gt_array), mean_loss)
+
+class SklearnTester(BaseTester):
+    def __init__(self, config: Config = None, model_filename: str = None, mode: str = "TEST"):
+        super().__init__(config, model_filename, False, mode)
+
+    def _load_model(self, model):
+        return pickle.load(open(os.path.join(self.model_filename_path, self.model_filename), "rb"))
+
+    @staticmethod
+    def _get_predictor(config, cuda, model_filename):
+        return SklearnPredictor(config, model_filename)
+
+    def test(self, model=None) -> Statistics:
+        if model is None:
+            model = self._load_model(os.path.join(self.model_filename_path, self.model_filename))
+
+        gt_array = []
+        npy_data_array = []
+        for ix, mp3_path in tqdm(self.test_list):
+            npy_path = os.path.join(self.data_path, 'mtat/emb', Path(mp3_path).with_suffix('.npy'))
+            npy_data_array.append(np.load(npy_path))
+            gt_array.append(self.binary[int(ix)])
+        npy_data_array = np.array(npy_data_array)
+
+        est_array = self.predictor.predict_data_prob(npy_data_array, model)
+        return Statistics(est_array, np.array(gt_array))
