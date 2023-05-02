@@ -4,7 +4,7 @@ from typing import Union
 from sklearn.base import ClassifierMixin
 from torch.nn import Module
 
-from src.components.base_preprocessor import BasePreProcessor
+from interfaces.base_preprocessor import BasePreProcessor
 from src.external.musicnn import Musicnn
 
 
