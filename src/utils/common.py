@@ -2,10 +2,13 @@ from dataclasses import dataclass
 from datetime import datetime
 
 import librosa
+import librosa.display
+import librosa.feature
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import torch
+from matplotlib import pyplot as plt
 from numpy import ndarray
 from plotly.graph_objs import Bar, Figure, Layout
 from sklearn import metrics
@@ -36,7 +39,7 @@ def move_to_cuda(x):
         if torch.cuda.is_available():
             x = x.cuda()
     except Exception:
-        print("Cannot use cuda for model, defaulting to cpu")
+        print("Cannot use cuda, defaulting to cpu")
     return x
 
 
@@ -70,9 +73,16 @@ def plot_probability_graph(prediction: pd.DataFrame):
     prediction = prediction.max(axis=1)
     prediction = prediction.sort_values()
     fig = Figure(data=Bar(x=prediction, y=prediction.index, orientation='h'),
-                 layout=Layout(title="Mean tag probability"))
+                 layout=Layout(title="Tag probability"))
     return fig
 
+def create_spectrogram(y, sr):
+    fig, ax = plt.subplots(nrows=2, sharex='all')
+    spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=13)
+    img = librosa.display.specshow(librosa.power_to_db(spectrogram), x_axis='time', y_axis='mel', ax=ax[1])
+    fig.colorbar(img, ax=ax, format="%+2.f dB")
+    librosa.display.waveshow(y, sr=sr, ax=ax[0])
+    return fig
 
 def get_tags(prediction: pd.DataFrame):
     predicted_tags = prediction.max(axis=1)

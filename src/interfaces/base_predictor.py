@@ -31,7 +31,6 @@ class BasePredictor:
         # model
         if model_filename is not None:
             self.model = self._load_model(config.model)
-            self.model = move_to_cuda(self.model)
 
     def predict_tags_prob(self, mp3_file) -> pd.DataFrame:
         out = self.predict_file_prob(mp3_file).T
@@ -42,6 +41,9 @@ class BasePredictor:
         return self.predict_data_prob(self._preprocessor_func(mp3_file).flatten())
 
     def predict_data_prob(self, x, model=None):
+        raise Exception("This is abstract method!")
+
+    def _load_model(self, model):
         raise Exception("This is abstract method!")
 
     def _preprocessor_func(self, mp3_file):

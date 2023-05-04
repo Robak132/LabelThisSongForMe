@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from torch import tensor
+from torch import tensor, nn
 from tqdm import tqdm
 
 from src.utils.common import move_to_cuda, Statistics, load_model
@@ -15,14 +15,11 @@ from src.interfaces.base_tester import BaseTester
 
 class Tester(BaseTester):
     def __init__(self, config: Config = None, model_filename: str = None, cuda: bool = None, mode: str = "TEST"):
-        super().__init__(config, model_filename, cuda, mode)
+        super().__init__(Predictor(config, cuda, model_filename), config, model_filename, cuda, mode)
+        self.loss_function = nn.BCELoss()
 
     def _load_model(self, model):
-        return load_model(model, self.model)
-
-    @staticmethod
-    def _get_predictor(config, cuda, model_filename):
-        return Predictor(config, cuda, model_filename)
+        return load_model(os.path.join(self.model_filename_path, self.model_filename), model)
 
     def test(self, model=None) -> Statistics:
         if model is None:
@@ -33,7 +30,7 @@ class Tester(BaseTester):
         losses = []
         model.eval()
         for ix, mp3_path in tqdm(self.test_list):
-            npy_path = os.path.join(self.data_path, 'mtat/npy', mp3_path.split('/')[0], mp3_path.split('/')[1][:-3]) + 'npy'
+            npy_path = os.path.join(self.data_path, 'mtat/npy', Path(mp3_path).with_suffix('.npy'))
             npy_data = np.load(npy_path, mmap_mode='c')
 
             ground_truth = tensor(self.binary[int(ix)], dtype=torch.float32)
@@ -54,14 +51,10 @@ class Tester(BaseTester):
 
 class SklearnTester(BaseTester):
     def __init__(self, config: Config = None, model_filename: str = None, mode: str = "TEST"):
-        super().__init__(config, model_filename, False, mode)
+        super().__init__(SklearnPredictor(config, model_filename), config, model_filename, False, mode)
 
     def _load_model(self, model):
         return pickle.load(open(os.path.join(self.model_filename_path, self.model_filename), "rb"))
-
-    @staticmethod
-    def _get_predictor(config, cuda, model_filename):
-        return SklearnPredictor(config, model_filename)
 
     def test(self, model=None) -> Statistics:
         if model is None:

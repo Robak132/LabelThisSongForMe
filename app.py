@@ -4,45 +4,38 @@ import librosa
 import librosa.display
 import librosa.feature
 import streamlit as st
-from matplotlib import pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
 
-from utils.common import create_tagogram, plot_probability_graph, get_tags
-from utils.config import Config
+from src.utils.common import create_tagogram, plot_probability_graph, get_tags, create_spectrogram
+from src.utils.config import Config
 from src.components.predictor import Predictor, SklearnPredictor
 from src.external.musicnn import Musicnn
 
-if 'selected_model_index' not in st.session_state:
-    st.session_state.selected_model_index = 0
 
-if 'data_models' not in st.session_state:
-    st.session_state.data_models = {
-        "MusicNN (10 classes)": Predictor(Config(model=Musicnn(n_class=10), dataset_name="mtat-10"),
-                                          model_filename="2023-04-23-18-16-20.pth"),
-        "MusicNN (20 classes)": Predictor(Config(model=Musicnn(n_class=20), dataset_name="mtat-20"),
-                                          model_filename="2023-03-27-11-49-27.pth"),
-        "KNeighborsClassifier (10 classes)": SklearnPredictor(Config(model=KNeighborsClassifier(), dataset_name="mtat-10"),
-                                                              model_filename="model.bin"),
-        "KNeighborsClassifier (20 classes)": SklearnPredictor(Config(model=KNeighborsClassifier(), dataset_name="mtat-20"),
-                                                              model_filename="model.bin")}
+@st.cache_resource(show_spinner="Initialising models...")
+def load_models():
+    musicnn_10_config = Config(model=Musicnn(n_class=10), dataset_name="mtat-10")
+    musicnn_20_config = Config(model=Musicnn(n_class=20), dataset_name="mtat-20")
+    knn_10_config = Config(model=KNeighborsClassifier(), dataset_name="mtat-10")
+    knn_20_config = Config(model=KNeighborsClassifier(), dataset_name="mtat-20")
+
+    return {"MusicNN (10 classes)": Predictor(musicnn_10_config, model_filename="2023-04-23-18-16-20.pth"),
+        "MusicNN (20 classes)": Predictor(musicnn_20_config, model_filename="2023-03-27-11-49-27.pth"),
+        "OpenL3 + K-nn Algorithm (10 classes)": SklearnPredictor(knn_10_config, model_filename="model.bin"),
+        "OpenL3 + K-nn Algorithm (20 classes)": SklearnPredictor(knn_20_config, model_filename="model.bin")}
 
 
-def update_music_track(upload):
-    st.write("## Visualisation of music tagging models")
+def print_music_classification_screen(upload):
+    st.title("Label This Song For Me")
     with NamedTemporaryFile(suffix="mp3") as temp, st.spinner('Loading...'):
         temp.write(upload.getvalue())
         temp.seek(0)
 
         y, sr = librosa.load(temp.name)
-        fig, ax = plt.subplots(nrows=2, sharex='all')
-        spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=13)
-        img = librosa.display.specshow(librosa.power_to_db(spectrogram), x_axis='time', y_axis='mel', ax=ax[1])
-        fig.colorbar(img, ax=ax, format="%+2.f dB")
         prediction = st.session_state.current_model.predict_tags_prob(mp3_file=temp.name)
-    st.write('#### Mel-frequency spectrogram')
-    librosa.display.waveshow(y, sr=sr, ax=ax[0])
-    st.pyplot(fig)
-    st.write(f'#### Assigned tags')
+    st.write('### Mel-frequency spectrogram')
+    st.pyplot(create_spectrogram(y, sr))
+    st.write(f'### Assigned tags')
     st.write(", ".join(get_tags(prediction)))
     st.plotly_chart(plot_probability_graph(prediction), use_container_width=True)
 
@@ -51,8 +44,25 @@ def update_music_track(upload):
         st.plotly_chart(create_tagogram(prediction))
 
 
+def print_main_screen():
+    st.title("Label This Song For Me")
+    st.write("App to label songs using AI methods.")
+    st.write("")
+    st.image("img/main.png")
+    st.write("")
+    st.write("Please upload a file to classify!")
+
+
 if __name__ == '__main__':
-    st.set_page_config(layout="centered", page_title="Music Tagging", initial_sidebar_state="expanded")
+    st.set_page_config(layout="centered", page_title="Label This Song For Me", initial_sidebar_state="expanded")
+
+    if 'selected_model_index' not in st.session_state:
+        st.session_state.selected_model_index = 0
+
+    if 'data_models' not in st.session_state:
+        st.session_state.data_models = load_models()
+
+    # Init app
     st.sidebar.write("## :gear: Settings")
     st.sidebar.write("#### Upload/Download")
     st.sidebar.file_uploader("Please upload mp3 file.", type=['mp3'], key='uploaded_file')
@@ -66,4 +76,6 @@ if __name__ == '__main__':
     st.session_state.current_model = st.session_state.data_models[st.session_state.selected_model_name]
     print(f"Setting current model to: {st.session_state.selected_model_name}")
     if st.session_state.uploaded_file is not None:
-        update_music_track(st.session_state.uploaded_file)
+        print_music_classification_screen(st.session_state.uploaded_file)
+    else:
+        print_main_screen()
