@@ -19,8 +19,7 @@ class BaseTester:
 
         self.predictor = self._get_predictor(config, cuda, model_filename)
 
-        self.model_filename_path = os.path.join(config.model_filename_path, config.model.__class__.__name__,
-                                                config.dataset_name)
+        self.model_filename_path = os.path.join(config.model_filename_path, config.model.__class__.__name__, config.dataset_name)
         self.model_filename = model_filename
 
         # cuda

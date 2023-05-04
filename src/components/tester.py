@@ -71,7 +71,7 @@ class SklearnTester(BaseTester):
         npy_data_array = []
         for ix, mp3_path in tqdm(self.test_list):
             npy_path = os.path.join(self.data_path, 'mtat/emb', Path(mp3_path).with_suffix('.npy'))
-            npy_data_array.append(np.load(npy_path))
+            npy_data_array.append(np.load(npy_path).flatten())
             gt_array.append(self.binary[int(ix)])
         npy_data_array = np.array(npy_data_array)
 
