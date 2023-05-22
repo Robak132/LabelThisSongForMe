@@ -88,7 +88,7 @@ matplotlib-inline==0.1.6
 mdurl==0.1.2
 mistune==2.0.5
 moviepy==1.0.3
-mpmath==1.2.1
+mpmath==1.3.0
 msgpack==1.0.4
 multidict==6.0.4
 nbclassic==0.5.3
